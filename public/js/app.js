@@ -257,12 +257,6 @@ async function generarQR() {
       link.href = finalUrl;
       link.textContent = finalUrl;
       
-      // Limpiar borrador ya que se guardo
-      places = [];
-      guardarBorrador();
-      dibujarMarcadoresGuardados();
-      actualizarLista();
-      
       toast('Transaccion exitosa. QR listo.');
     } else {
       toast('Respuesta rechazada por servidor: ' + (data.error || 'Error.'), true);
