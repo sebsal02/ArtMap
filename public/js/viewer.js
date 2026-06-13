@@ -31,7 +31,7 @@ function mostrarMapa(mapData) {
 
   const places = mapData.places || [];
   
-  map = L.map('map').setView(places.length ? [places[0].lat, places[0].lng] : [19.4326, -99.1332], 13);
+  map = L.map('map').setView(places.length ? [places[0].lat, places[0].lng] : [19.4326, -99.1332], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
   const placesDiv = document.getElementById('placesList');
@@ -57,7 +57,7 @@ function mostrarMapa(mapData) {
       </div>
       <div class="place-body">
         <button class="compare-btn" onclick="abrirComparador('${p.realImg}', '${p.ilusImg}')">
-          [ Activar Comparador de Capas ]
+          Activar Comparador de Capas
         </button>
         <div class="images-row">
           <div class="img-box">
@@ -76,7 +76,7 @@ function mostrarMapa(mapData) {
 
   if (places.length > 1) {
     const bounds = L.latLngBounds(places.map(p => [p.lat, p.lng]));
-    map.fitBounds(bounds, { padding: [30, 30] });
+    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
   }
 }
 

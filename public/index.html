@@ -19,10 +19,9 @@
 <div class="app-grid">
   <aside class="sidebar">
     <div class="tabs">
-      <button class="tab on" onclick="cambiarTab('agregar')">[ Agregar Lugar ]</button>
-      <button class="tab" onclick="cambiarTab('lista')">[ Lugares Activos ]</button>
-      <button class="tab" onclick="cambiarTab('historial')">[ Mis Mapas Guardados ]</button>
-      <button class="tab" onclick="cambiarTab('qr')">[ Generar Codigo QR ]</button>
+      <button class="tab on" onclick="cambiarTab('agregar')">Agregar Lugar</button>
+      <button class="tab" onclick="cambiarTab('historial')">Tus Mapas</button>
+      <button class="tab" onclick="cambiarTab('qr')">Generar Codigo QR</button>
     </div>
 
     <!-- PANEL AGREGAR -->
@@ -37,29 +36,23 @@
       
       <label class="upz">
         <input type="file" id="uReal" accept="image/*" onchange="previewImg(event, 'pvReal')">
-        <b>[ Subir Foto Real ]</b>
+        <b>Subir Foto Real</b>
       </label>
       <img id="pvReal" class="prev" onclick="verImagen(this.src)" title="Clic para ver en pantalla completa">
 
       <label class="upz">
         <input type="file" id="uIlus" accept="image/*" onchange="previewImg(event, 'pvIlus')">
-        <b>[ Subir Ilustracion ]</b>
+        <b>Subir Ilustracion</b>
       </label>
       <img id="pvIlus" class="prev" onclick="verImagen(this.src)" title="Clic para ver en pantalla completa">
 
-      <button class="btn btn-ochre" style="margin-top:10px" onclick="agregarLugar()">[ Guardar Lugar en el Borrador ]</button>
-    </div>
-
-    <!-- PANEL LISTA -->
-    <div class="panel" id="tab-lista">
-      <div style="font-size:0.85rem; margin-bottom:10px; color:#555;">Estos lugares estan guardados temporalmente en tu navegador.</div>
-      <div id="listaLugares">No hay lugares activos.</div>
+      <button class="btn btn-ochre" style="margin-top:10px" onclick="agregarLugar()">Guardar Lugar en el Borrador</button>
     </div>
 
     <!-- PANEL HISTORIAL DE MAPAS DEL USUARIO -->
     <div class="panel" id="tab-historial">
-      <div style="font-size:0.85rem; margin-bottom:10px; color:#555;">Tus mapas almacenados en el servidor, vinculados a tu dispositivo actual.</div>
-      <button class="btn btn-blue" onclick="cargarHistorialMapas()">[ Actualizar Historial ]</button>
+      <div style="font-size:0.85rem; margin-bottom:10px; color:#555;">Tus mapas</div>
+      <button class="btn btn-blue" onclick="cargarHistorialMapas()">Actualizar Historial</button>
       <div id="listaHistorial" style="margin-top:15px; display:flex; flex-direction:column; gap:10px;">Cargando...</div>
     </div>
 
@@ -69,15 +62,15 @@
       <input class="inp" id="alumnoNombre" placeholder="Nombre completo">
       
       <button class="btn btn-green" style="margin-top:15px;width:100%;font-size:1.1rem;padding:15px;" onclick="generarQR()" id="btnGenerar">
-        [ Guardar en Servidor y Generar QR ]
+        Guardar en Servidor y Generar QR
       </button>
 
       <div class="qr-block" style="display:none;" id="qrResult">
         <h3>Codigo QR Generado</h3>
         <p>Este codigo es accesible por cualquier dispositivo y consulta directamente tus datos almacenados de forma segura.</p>
         <div id="qrCanvas" style="background:#fff;padding:10px;border-radius:10px;margin:15px auto;width:220px;height:220px;display:flex;justify-content:center;align-items:center;"></div>
-        <a id="qrLink" href="#" target="_blank" style="color:var(--ochre);text-decoration:none;font-weight:bold;margin-bottom:10px;display:block;">[ Abrir Enlace Directo ]</a>
-        <button class="btn btn-blue" onclick="window.print()">[ Imprimir Esta Pagina ]</button>
+        <a id="qrLink" href="#" target="_blank" style="color:var(--ochre);text-decoration:none;font-weight:bold;margin-bottom:10px;display:block;">Abrir Enlace Directo</a>
+        <button class="btn btn-blue" onclick="window.print()">Imprimir Esta Pagina</button>
       </div>
     </div>
   </aside>

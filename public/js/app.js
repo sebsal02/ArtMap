@@ -23,7 +23,7 @@ window.onload = () => {
     } catch(e) {}
   }
 
-  map = L.map('map').setView([19.4326, -99.1332], 13);
+  map = L.map('map').setView([19.4326, -99.1332], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
   map.on('click', (e) => {
@@ -164,7 +164,7 @@ function actualizarLista() {
           <span style="font-size:0.75rem; color:#666; font-weight:bold;">Foto Real</span>
         </div>
       </div>
-      <button onclick="event.stopPropagation(); abrirComparador('${p.realImg}', '${p.ilusImg}')" style="margin-top:5px; width:100%; background:var(--ink); color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">[ Abrir Visor Comparativo ]</button>
+      <button onclick="event.stopPropagation(); abrirComparador('${p.realImg}', '${p.ilusImg}')" style="margin-top:5px; width:100%; background:var(--ink); color:#fff; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">Abrir Visor Comparativo</button>
     </div>
   `).join('');
 }
@@ -201,7 +201,7 @@ async function cargarHistorialMapas() {
         <div style="border:1px solid #ccc; padding:12px; border-radius:8px; background:#fff;">
           <div style="font-weight:bold;">Autor: ${m.author}</div>
           <div style="font-size:0.8rem; color:#666;">Lugares: ${m.placesCount} | Creado: ${new Date(m.createdAt).toLocaleDateString()}</div>
-          <a href="viewer.html?id=${m.id}" target="_blank" style="display:inline-block; margin-top:8px; color:var(--ochre); font-weight:bold; text-decoration:none;">[ Abrir Mapa ]</a>
+          <a href="viewer.html?id=${m.id}" target="_blank" style="display:inline-block; margin-top:8px; color:var(--ochre); font-weight:bold; text-decoration:none;">Abrir Mapa</a>
         </div>
       `).join('');
     } else {
@@ -224,7 +224,7 @@ async function generarQR() {
   try {
     if (window.location.protocol === 'file:' || (window.location.hostname === '127.0.0.1' && window.location.port !== '3000')) {
       toast('Error de entorno: Ejecute Node.js localmente o implemente en servidor.', true);
-      btn.innerHTML = '[ Guardar en Servidor y Generar QR ]';
+      btn.innerHTML = 'Guardar en Servidor y Generar QR';
       btn.disabled = false;
       return;
     }
@@ -271,7 +271,7 @@ async function generarQR() {
     console.error(err);
     toast('Error critico de conexion.', true);
   } finally {
-    btn.innerHTML = '[ Guardar en Servidor y Generar QR ]';
+    btn.innerHTML = 'Guardar en Servidor y Generar QR';
     btn.disabled = false;
   }
 }

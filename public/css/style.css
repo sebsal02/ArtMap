@@ -58,6 +58,10 @@ header { background:var(--ink); color:var(--cream); padding:15px 20px; display:f
   .app-grid { grid-template-columns:1fr; grid-template-rows:400px 1fr; height:auto; }
   .sidebar { max-height:400px; }
   #map { height:calc(100vh - 470px); min-height:300px; }
+  
+  .large-modal { max-width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; margin: 0; }
+  .modal-ov { padding: 0; }
+  .slider-box { max-height: 80vh !important; }
 }
 
 /* Modal Compare */
