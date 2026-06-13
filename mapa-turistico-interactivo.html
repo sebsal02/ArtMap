@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MapArt</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{--ink:#1a1209;--cream:#f5f0e8;--ochre:#c8861a;--rust:#a83c1f;--sage:#2d6a2d;--paper:#ede8da;--gold:#d4a843;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden;}
+
+/* ── VISTAS ── */
+.vista{display:none;}
+.vista.activa{display:block;}
+
+/* ══════════════════════════════════
+   VISTA EDITOR (la pantalla grande)
+══════════════════════════════════ */
+#vistaEditor{height:100vh;overflow:hidden;}
+header{background:var(--ink);color:var(--cream);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid var(--ochre);height:60px;}
+.logo{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;}
+.logo span{color:var(--ochre);}
+.logo-sub{font-size:.62rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.8;}
+.hdr-btns{display:flex;gap:7px;align-items:center;}
+.btn{padding:8px 14px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:5px;}
+.btn-green{background:var(--sage);color:#fff;} .btn-green:hover{filter:brightness(1.15);}
+.btn-blue{background:#1a4a8a;color:#fff;} .btn-blue:hover{filter:brightness(1.2);}
+.btn-ochre{background:var(--ochre);color:#fff;} .btn-ochre:hover{background:var(--gold);}
+.btn-ghost{background:transparent;color:var(--cream);border:1.5px solid rgba(255,255,255,.3);} .btn-ghost:hover{background:rgba(255,255,255,.12);}
+.btn-danger{background:var(--rust);color:#fff;font-size:.72rem;padding:4px 9px;border-radius:4px;border:none;cursor:pointer;}
+
+.app-grid{display:grid;grid-template-columns:350px 1fr;height:calc(100vh - 60px);overflow:hidden;}
+.sidebar{background:var(--paper);border-right:2px solid rgba(26,18,9,.1);display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - 60px);}
+.tabs{display:flex;border-bottom:2px solid rgba(26,18,9,.1);}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:.72rem;font-weight:500;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--ink);opacity:.45;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab.on{opacity:1;border-bottom-color:var(--ochre);color:var(--ochre);}
+.panel{display:none;flex:1;overflow-y:auto;padding:14px;flex-direction:column;gap:11px;}
+.panel.on{display:flex;}
+
+.step-card{background:var(--ink);color:var(--cream);border-radius:9px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;}
+.step-n{background:var(--ochre);color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0;}
+.step-t{font-size:.8rem;line-height:1.5;} .step-t b{color:var(--gold);}
+
+.coord-box{background:#fff;border:2px solid rgba(26,18,9,.12);border-radius:7px;padding:9px 13px;display:flex;align-items:center;gap:8px;}
+.cdot{width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0;}
+.cdot.on{background:var(--ochre);animation:pu 1.5s infinite;}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+.ctxt{font-size:.78rem;opacity:.6;} .ctxt.ok{color:var(--sage);opacity:1;font-weight:500;}
+
+.lbl{font-size:.7rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;opacity:.5;}
+.inp,.txta{background:#fff;border:1.5px solid rgba(26,18,9,.15);border-radius:6px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:.86rem;color:var(--ink);width:100%;transition:border-color .2s;}
+.inp:focus,.txta:focus{outline:none;border-color:var(--ochre);}
+.txta{resize:vertical;min-height:60px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+
+.upz{border:2px dashed rgba(26,18,9,.2);border-radius:8px;padding:13px;text-align:center;cursor:pointer;background:rgba(255,255,255,.6);position:relative;transition:all .2s;}
+.upz:hover{border-color:var(--ochre);background:rgba(200,134,26,.06);}
+.upz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upz-em{font-size:1.5rem;} .upz-h{font-size:.76rem;opacity:.55;margin-top:3px;} .upz-h b{color:var(--ochre);opacity:1;}
+.prev{width:100%;height:85px;object-fit:cover;border-radius:6px;margin-top:5px;border:2px solid var(--ochre);display:none;}
+
+.pt-card{background:#fff;border-radius:8px;border:1.5px solid rgba(26,18,9,.08);overflow:hidden;}
+.pt-hdr{display:flex;align-items:center;gap:9px;padding:9px 11px;cursor:pointer;background:var(--paper);}
+.pt-num{width:24px;height:24px;background:var(--ochre);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;}
+.pt-nm{font-size:.86rem;font-weight:500;flex:1;}
+.pt-body{padding:10px 11px;display:none;}
+.pt-body.on{display:block;}
+.thumbs{display:flex;gap:5px;margin:5px 0;}
+.th{width:48px;height:38px;object-fit:cover;border-radius:4px;}
+.th-l{font-size:.6rem;opacity:.45;text-align:center;margin-top:1px;}
+#map{width:100%;height:calc(100vh - 60px);z-index:1;}
+
+/* COMPARTIR panel */
+.share-block{background:#fff;border-radius:9px;border:1.5px solid rgba(26,18,9,.08);padding:14px;display:flex;flex-direction:column;gap:9px;}
+.share-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;}
+.share-desc{font-size:.8rem;line-height:1.5;opacity:.7;}
+.share-row{background:var(--paper);border-radius:7px;padding:9px 12px;display:flex;align-items:center;gap:9px;font-size:.8rem;}
+.share-ico{font-size:1.2rem;flex-shrink:0;}
+
+/* QR block */
+.qr-block{background:var(--ink);border-radius:10px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;}
+.qr-title{font-family:'Playfair Display',serif;color:var(--cream);font-size:.95rem;}
+.qr-sub{color:var(--gold);font-size:.68rem;letter-spacing:1px;text-transform:uppercase;}
+#qr-canvas-wrap{width:180px;height:180px;background:#fff;border-radius:6px;padding:6px;display:flex;align-items:center;justify-content:center;}
+.qr-msg{color:rgba(255,255,255,.45);font-size:.72rem;max-width:260px;line-height:1.4;}
+.qr-btns{display:flex;flex-direction:column;gap:6px;width:100%;}
+
+/* ══════════════════════════════════
+   VISTA PRESENTACIÓN (celular / QR)
+══════════════════════════════════ */
+#vistaPresentacion{background:var(--cream);min-height:100vh;}
+.pres-header{background:var(--ink);color:var(--cream);padding:16px 18px;border-bottom:4px solid var(--ochre);}
+.pres-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;}
+.pres-logo span{color:var(--ochre);}
+.pres-alumno{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.85;margin-top:2px;}
+.pres-mapa{width:100%;height:280px;z-index:1;}
+.pres-lugares{padding:14px;display:flex;flex-direction:column;gap:14px;}
+.lugar-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 3px 16px rgba(26,18,9,.12);border:1.5px solid rgba(26,18,9,.07);}
+.lugar-card-header{background:var(--ink);color:var(--cream);padding:12px 15px;display:flex;align-items:center;gap:10px;}
+.lugar-num{background:var(--ochre);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0;}
+.lugar-nombre{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold);}
+.lugar-desc{font-size:.78rem;opacity:.7;margin-top:3px;line-height:1.4;}
+.lugar-coords{font-size:.64rem;opacity:.35;font-family:monospace;margin-top:4px;}
+.lugar-body{padding:12px;}
+.comparar-btn{width:100%;background:var(--ochre);color:#fff;border:none;padding:10px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;cursor:pointer;margin-bottom:10px;}
+.comparar-btn:active{filter:brightness(.9);}
+.imgs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.imgs-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:7px;border:2px solid var(--paper);}
+.img-lbl{font-size:.65rem;opacity:.5;text-align:center;margin-top:3px;}
+
+/* MODAL comparar (en presentación) */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(26,18,9,.9);z-index:9999;align-items:center;justify-content:center;padding:10px;}
+.modal-ov.on{display:flex;}
+.modal{background:var(--paper);border-radius:11px;width:min(720px,98vw);max-height:95vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-hdr{background:var(--ink);color:var(--cream);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.modal-tit{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;}
+.modal-x{background:transparent;border:none;color:var(--cream);font-size:1.3rem;cursor:pointer;opacity:.7;}
+.modal-x:hover{opacity:1;}
+.modal-body{padding:16px;overflow-y:auto;}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.cmp-col{display:flex;flex-direction:column;gap:6px;}
+.cmp-lbl{font-size:.68rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--ochre);}
+.cmp-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:7px;border:3px solid var(--ink);}
+.cmp-img.il{border-color:var(--ochre);}
+.slider-wrap{margin-top:14px;}
+.slider-sub{font-size:.7rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--ochre);margin-bottom:6px;}
+.slider-hint{font-size:.73rem;opacity:.5;margin-bottom:8px;}
+.sc{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:4/3;cursor:col-resize;user-select:none;}
+.si{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.si.top{clip-path:inset(0 50% 0 0);z-index:2;}
+.sline{position:absolute;top:0;bottom:0;left:50%;width:3px;background:#fff;z-index:10;box-shadow:0 0 10px rgba(0,0,0,.5);}
+.shandle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;background:#fff;border-radius:50%;z-index:11;display:flex;align-items:center;justify-content:center;font-size:.95rem;box-shadow:0 2px 10px rgba(0,0,0,.4);}
+.sbadge{position:absolute;top:8px;font-size:.66rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;background:rgba(0,0,0,.6);color:#fff;padding:2px 7px;border-radius:3px;z-index:12;}
+.sb-l{left:8px;} .sb-r{right:8px;}
+.cbar{margin-top:12px;background:var(--ink);color:var(--cream);border-radius:7px;padding:10px 14px;font-size:.76rem;}
+.cbar b{color:var(--gold);}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--sage);color:#fff;padding:10px 16px;border-radius:7px;font-size:.82rem;font-weight:500;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translateY(60px);opacity:0;transition:all .28s;z-index:99999;}
+.toast.on{transform:translateY(0);opacity:1;}
+.toast.err{background:var(--rust);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(26,18,9,.2);border-radius:2px;}
+.nopt{text-align:center;padding:26px 14px;opacity:.38;font-size:.84rem;line-height:1.6;}
+.nopt-i{font-size:2rem;margin-bottom:7px;}
+.div-lbl{font-size:.67rem;letter-spacing:2px;text-transform:uppercase;opacity:.32;padding:2px 0;border-bottom:1px solid rgba(26,18,9,.1);}
+@media(max-width:700px){
+  .app-grid{grid-template-columns:1fr;grid-template-rows:300px 1fr;height:auto;}
+  .sidebar{height:300px;width:100%;}
+  #map{height:calc(100vh - 360px);min-height:250px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     VISTA 1: EDITOR (la pantalla del alumno)
+════════════════════════════════════════ -->
+<div class="vista activa" id="vistaEditor">
+
+  <header>
+    <div>
+      <div class="logo">Map<span>Art</span></div>
+      <div class="logo-sub">Mapa Turístico · Diseño Gráfico</div>
+    </div>
+    <div class="hdr-btns">
+      <button class="btn btn-green" onclick="guardarMapa()">💾 Guardar mi mapa</button>
+      <button class="btn btn-blue" onclick="document.getElementById('abrirArch').click()">📂 Abrir mapa guardado</button>
+      <input type="file" id="abrirArch" accept=".mapart" style="display:none" onchange="cargarMapa(event)">
+    </div>
+  </header>
+
+  <div class="app-grid">
+    <aside class="sidebar">
+      <div class="tabs">
+        <button class="tab on" onclick="cambiarTab('agregar')">➕ Agregar</button>
+        <button class="tab" onclick="cambiarTab('lista')">📍 Lugares</button>
+        <button class="tab" onclick="cambiarTab('compartir')">📲 Mi QR</button>
+      </div>
+
+      <!-- PANEL AGREGAR -->
+      <div class="panel on" id="tab-agregar">
+        <div class="step-card">
+          <div class="step-n">1</div>
+          <div class="step-t"><b>Haz clic en el mapa</b> en el lugar que quieres agregar.</div>
+        </div>
+        <div class="coord-box">
+          <div class="cdot" id="cdot"></div>
+          <div class="ctxt" id="ctxt">Esperando clic en el mapa…</div>
+        </div>
+        <div class="step-card">
+          <div class="step-n">2</div>
+          <div class="step-t">Escribe el <b>nombre y descripción</b>.</div>
+        </div>
+        <div class="fg"><span class="lbl">Nombre del lugar</span>
+          <input class="inp" id="pNombre" placeholder="Ej: Catedral Central">
+        </div>
+        <div class="fg"><span class="lbl">Descripción</span>
+          <textarea class="txta" id="pDesc" placeholder="Historia, datos curiosos…"></textarea>
+        </div>
+        <div class="step-card">
+          <div class="step-n">3</div>
+          <div class="step-t">Sube la <b>foto real</b> y tu <b>ilustración</b>.</div>
+        </div>
+        <div><div class="div-lbl">📸 Fotografía real</div></div>
+        <div class="upz" onclick="document.getElementById('uReal').click()">
+          <input type="file" id="uReal" accept="image/*" onchange="prevImg(event,'pvReal')">
+          <div class="upz-em">📸</div><div class="upz-h">Toca para <b>elegir la foto real</b></div>
+        </div>
+        <img id="pvReal" class="prev">
+        <div><div class="div-lbl">🎨 Tu ilustración</div></div>
+        <div class="upz" onclick="document.getElementById('uIlus').click()">
+          <input type="file" id="uIlus" accept="image/*" onchange="prevImg(event,'pvIlus')">
+          <div class="upz-em">🎨</div><div class="upz-h">Toca para <b>elegir tu ilustración</b></div>
+        </div>
+        <img id="pvIlus" class="prev">
+        <button class="btn btn-ochre" style="width:100%;padding:12px;justify-content:center;font-size:.9rem" onclick="agregarLugar()">
+          📍 Agregar este lugar al mapa
+        </button>
+      </div>
+
+      <!-- PANEL LISTA -->
+      <div class="panel" id="tab-lista">
+        <div id="listaLugares">
+          <div class="nopt"><div class="nopt-i">🗺️</div>Aún no tienes lugares.<br>Ve a <b>Agregar</b> y haz clic en el mapa.</div>
+        </div>
+      </div>
+
+      <!-- PANEL COMPARTIR / QR -->
+      <div class="panel" id="tab-compartir">
+
+        <div class="share-block">
+          <div class="share-title">📛 Tu nombre (para el archivo)</div>
+          <div class="fg"><span class="lbl">Nombre del alumno</span>
+            <input class="inp" id="nombreAlumno" placeholder="Ej: Ana García">
+          </div>
+          <button class="btn btn-green" style="width:100%;justify-content:center" onclick="guardarMapa()">💾 Guardar mi mapa</button>
+        </div>
+
+        <div class="share-block">
+          <div class="share-title">📲 Código QR de tu mapa</div>
+          <div class="share-desc">
+            El QR lleva directo a <b>una página con tu mapa y tus imágenes</b>. Cualquier celular lo escanea y ve todos tus lugares, las fotos reales y tus ilustraciones con el comparador.
+          </div>
+          <div class="share-row"><div class="share-ico">1️⃣</div> Agrega todos tus lugares con sus imágenes</div>
+          <div class="share-row"><div class="share-ico">2️⃣</div> Escribe tu nombre arriba</div>
+          <div class="share-row"><div class="share-ico">3️⃣</div> Presiona <b>Generar mi QR</b></div>
+          <div class="share-row"><div class="share-ico">4️⃣</div> Escanea el QR — verás tu mapa completo</div>
+          <button class="btn btn-ochre" style="width:100%;justify-content:center;padding:11px;font-size:.88rem" onclick="generarQR()">
+            🔄 Generar mi QR
+          </button>
+        </div>
+
+        <div class="qr-block">
+          <div class="qr-title">Tu código QR</div>
+          <div class="qr-sub">Escanea para ver el mapa</div>
+          <div id="qr-canvas-wrap">
+            <div id="qrDiv" style="width:168px;height:168px;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:.72rem;color:#888;text-align:center">Presiona<br>"Generar mi QR"</span>
+            </div>
+          </div>
+          <div class="qr-msg" id="qrMsg">Tu QR aparecerá aquí.</div>
+          <div class="qr-btns">
+            <button class="btn btn-ghost" style="justify-content:center" onclick="descargarQR()">⬇️ Descargar QR como imagen</button>
+            <button class="btn btn-ghost" style="justify-content:center" onclick="imprimirQR()">🖨️ Imprimir QR</button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+    <div id="map"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     VISTA 2: PRESENTACIÓN (se abre con el QR en celular)
+════════════════════════════════════════ -->
+<div class="vista" id="vistaPresentacion">
+  <div class="pres-header">
+    <div class="pres-logo">Map<span>Art</span></div>
+    <div class="pres-alumno" id="presAlumnoNombre">Cargando mapa…</div>
+  </div>
+  <div id="presMapaWrap" style="width:100%;height:280px;position:relative;z-index:1;"></div>
+  <div class="pres-lugares" id="presLugares"></div>
+</div>
+
+<!-- MODAL COMPARAR -->
+<div class="modal-ov" id="modalCmp">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-tit" id="modalTit">Comparar</div>
+      <button class="modal-x" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="cmp-grid">
+        <div class="cmp-col"><div class="cmp-lbl">📸 Foto real</div><img id="mReal" class="cmp-img" src="" alt=""></div>
+        <div class="cmp-col"><div class="cmp-lbl">🎨 Ilustración</div><img id="mIlus" class="cmp-img il" src="" alt=""></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-sub">↔ Desliza para comparar</div>
+        <div class="slider-hint">Arrastra el círculo blanco de lado a lado</div>
+        <div class="sc" id="sBox" onmousedown="startDrag(event)" ontouchstart="startDrag(event)">
+          <img id="sReal" class="si" src="" alt="">
+          <img id="sIlus" class="si top" src="" alt="">
+          <div class="sline" id="sLine"></div>
+          <div class="shandle" id="sHandle">↔</div>
+          <div class="sbadge sb-l">ILUSTRACIÓN</div>
+          <div class="sbadge sb-r">FOTO REAL</div>
+        </div>
+      </div>
+      <div class="cbar"><b>📍 Coordenadas:</b> <span id="mCoords" style="font-family:monospace;opacity:.8;margin-left:6px"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// DETECCIÓN: ¿abrimos editor o presentación?
+// Si la URL tiene #mapa=... cargamos la vista de presentación
+// ════════════════════════════════════════
+window.addEventListener('load', function() {
+  const hash = window.location.hash;
+  if (hash && hash.startsWith('#mapa=')) {
+    mostrarVista('presentacion');
+    cargarPresentacionDesdeHash(hash);
+  } else {
+    mostrarVista('editor');
+    initMapa();
+  }
+});
+
+function mostrarVista(cual) {
+  document.getElementById('vistaEditor').classList.toggle('activa', cual==='editor');
+  document.getElementById('vistaPresentacion').classList.toggle('activa', cual==='presentacion');
+  // Leaflet necesita saber el tamaño real del div después de que sea visible
+  if (cual === 'editor' && mapaLeaflet) {
+    setTimeout(() => mapaLeaflet.invalidateSize(), 50);
+  }
+}
+
+// ════════════════════════════════════════
+// DATOS GLOBALES
+// ════════════════════════════════════════
+let mapaLeaflet, lugares = [], coordSel = null, marcadores = [];
+let dragOn = false;
+let qrImagenUrl = null;
+
+// ════════════════════════════════════════
+// EDITOR — MAPA LEAFLET
+// ════════════════════════════════════════
+function initMapa() {
+  mapaLeaflet = L.map('map', { preferCanvas: true }).setView([19.4326, -99.1332], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© OpenStreetMap', maxZoom:19
+  }).addTo(mapaLeaflet);
+  setTimeout(() => mapaLeaflet.invalidateSize(), 100);
+
+  mapaLeaflet.on('click', function(e) {
+    coordSel = e.latlng;
+    document.getElementById('cdot').classList.add('on');
+    const ct = document.getElementById('ctxt');
+    ct.className = 'ctxt ok';
+    ct.textContent = `✅ Lat: ${e.latlng.lat.toFixed(5)}  Lng: ${e.latlng.lng.toFixed(5)}`;
+    if (window._tmp) mapaLeaflet.removeLayer(window._tmp);
+    window._tmp = L.circleMarker(e.latlng, {radius:11,color:'#c8861a',weight:3,fillColor:'#fff',fillOpacity:.9}).addTo(mapaLeaflet);
+    cambiarTab('agregar');
+    toast('📍 Ubicación seleccionada');
+  });
+}
+
+function hacerIcono(n) {
+  return L.divIcon({
+    html:`<div style="background:#c8861a;color:#fff;width:33px;height:33px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:3px solid #1a1209;box-shadow:0 3px 10px rgba(0,0,0,.4)"><span style="transform:rotate(45deg)">${n}</span></div>`,
+    className:'',iconSize:[33,33],iconAnchor:[17,33],popupAnchor:[0,-36]
+  });
+}
+
+// ════════════════════════════════════════
+// EDITOR — AGREGAR LUGAR
+// ════════════════════════════════════════
+function agregarLugar() {
+  const nombre = document.getElementById('pNombre').value.trim();
+  if (!nombre) { toast('⚠️ Escribe el nombre del lugar', true); return; }
+  if (!coordSel) { toast('⚠️ Haz clic en el mapa primero', true); return; }
+  const fotoReal = document.getElementById('pvReal').src || '';
+  const fotoIlus = document.getElementById('pvIlus').src || '';
+  const l = {
+    id: Date.now(),
+    nombre,
+    desc: document.getElementById('pDesc').value.trim(),
+    lat: coordSel.lat,
+    lng: coordSel.lng,
+    fotoReal: fotoReal.startsWith('data:') ? fotoReal : '',
+    fotoIlus: fotoIlus.startsWith('data:') ? fotoIlus : ''
+  };
+  lugares.push(l);
+  ponerMarcadorEditor(l);
+  renderLista();
+  limpiarForm();
+  if (window._tmp) { mapaLeaflet.removeLayer(window._tmp); window._tmp = null; }
+  coordSel = null;
+  document.getElementById('cdot').classList.remove('on');
+  const ct = document.getElementById('ctxt'); ct.className='ctxt'; ct.textContent='Esperando clic en el mapa…';
+  toast(`✅ "${nombre}" agregado`);
+  cambiarTab('lista');
+}
+
+function ponerMarcadorEditor(l) {
+  const n = lugares.indexOf(l)+1;
+  const m = L.marker([l.lat,l.lng],{icon:hacerIcono(n)}).addTo(mapaLeaflet);
+  const tr = l.fotoReal&&l.fotoReal.length>50;
+  const ti = l.fotoIlus&&l.fotoIlus.length>50;
+  m.bindPopup(`<div style="padding:12px;min-width:190px;font-family:'DM Sans',sans-serif;background:#1a1209;color:#f5f0e8;border-radius:7px">
+    <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#d4a843;margin-bottom:5px">${l.nombre}</div>
+    ${l.desc?`<div style="font-size:.75rem;opacity:.75;margin-bottom:7px">${l.desc}</div>`:''}
+    ${(tr||ti)?`<div style="display:flex;gap:5px;margin-bottom:7px">${tr?`<img src="${l.fotoReal}" style="width:58px;height:42px;object-fit:cover;border-radius:4px">`:''} ${ti?`<img src="${l.fotoIlus}" style="width:58px;height:42px;object-fit:cover;border-radius:4px">`:''}</div>`:''}
+    <div style="font-size:.62rem;opacity:.35;margin-bottom:7px;font-family:monospace">📍 ${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}</div>
+    <button onclick="abrirModal(${l.id})" style="background:#c8861a;color:#fff;border:none;padding:7px;border-radius:5px;width:100%;font-family:'DM Sans',sans-serif;cursor:pointer;font-size:.78rem">↔ Comparar</button>
+  </div>`,{className:'',closeButton:true});
+  marcadores.push({m,id:l.id});
+}
+
+// ════════════════════════════════════════
+// LISTA DE LUGARES
+// ════════════════════════════════════════
+function renderLista() {
+  const el = document.getElementById('listaLugares');
+  if (!lugares.length) {
+    el.innerHTML=`<div class="nopt"><div class="nopt-i">🗺️</div>Aún no tienes lugares.</div>`;
+    return;
+  }
+  el.innerHTML = lugares.map((l,i)=>{
+    const tr=l.fotoReal&&l.fotoReal.length>50;
+    const ti=l.fotoIlus&&l.fotoIlus.length>50;
+    return `<div class="pt-card">
+      <div class="pt-hdr" onclick="toggleCard(${l.id})">
+        <div class="pt-num">${i+1}</div>
+        <div class="pt-nm">${l.nombre}</div>
+        <button class="btn-danger" onclick="event.stopPropagation();borrarLugar(${l.id})">✕</button>
+      </div>
+      <div class="pt-body" id="c${l.id}">
+        <div style="font-size:.72rem;opacity:.45;font-family:monospace;margin-bottom:4px">${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}</div>
+        ${l.desc?`<div style="font-size:.78rem;opacity:.65;margin-bottom:5px">${l.desc}</div>`:''}
+        <div class="thumbs">
+          ${tr?`<div><img class="th" src="${l.fotoReal}"><div class="th-l">Foto real</div></div>`:''}
+          ${ti?`<div><img class="th" src="${l.fotoIlus}"><div class="th-l">Ilustración</div></div>`:''}
+        </div>
+        <button onclick="abrirModal(${l.id})" style="background:var(--ochre);color:#fff;border:none;padding:7px;border-radius:5px;width:100%;font-family:'DM Sans',sans-serif;cursor:pointer;font-size:.78rem;margin-top:5px">↔ Comparar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleCard(id){document.getElementById('c'+id).classList.toggle('on');}
+function borrarLugar(id){
+  lugares=lugares.filter(l=>l.id!==id);
+  const x=marcadores.find(m=>m.id===id);
+  if(x)mapaLeaflet.removeLayer(x.m);
+  marcadores=marcadores.filter(m=>m.id!==id);
+  marcadores.forEach(x=>mapaLeaflet.removeLayer(x.m));
+  marcadores=[];
+  lugares.forEach(l=>ponerMarcadorEditor(l));
+  renderLista(); toast('🗑️ Lugar eliminado');
+}
+
+// ════════════════════════════════════════
+// FORMULARIO
+// ════════════════════════════════════════
+function prevImg(ev, idPrev){
+  const f=ev.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{const i=document.getElementById(idPrev);i.src=e.target.result;i.style.display='block';};
+  r.readAsDataURL(f);
+}
+function limpiarForm(){
+  ['pNombre','pDesc'].forEach(id=>document.getElementById(id).value='');
+  ['pvReal','pvIlus'].forEach(id=>{const i=document.getElementById(id);i.style.display='none';i.src='';});
+  ['uReal','uIlus'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════
+function cambiarTab(n){
+  const tabs=['agregar','lista','compartir'];
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab')[tabs.indexOf(n)].classList.add('on');
+  document.getElementById('tab-'+n).classList.add('on');
+}
+
+// ════════════════════════════════════════
+// GUARDAR / CARGAR MAPA
+// ════════════════════════════════════════
+function guardarMapa(){
+  if(!lugares.length){toast('⚠️ Agrega al menos un lugar',true);return;}
+  const nombre=(document.getElementById('nombreAlumno').value.trim()||'mi-mapa').replace(/\s+/g,'-');
+  const datos=JSON.stringify({v:'2',alumno:nombre,lugares});
+  const blob=new Blob([datos],{type:'application/octet-stream'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`mapa-${nombre}.mapart`;
+  a.click();
+  toast(`💾 Guardado como "mapa-${nombre}.mapart"`);
+}
+function cargarMapa(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      marcadores.forEach(x=>mapaLeaflet.removeLayer(x.m)); marcadores=[];
+      lugares=(d.lugares||d.points||[]).map(l=>({
+        id:l.id||Date.now()+Math.random(),
+        nombre:l.nombre||l.name||'Sin nombre',
+        desc:l.desc||l.description||'',
+        lat:l.lat,lng:l.lng,
+        fotoReal:l.fotoReal||l.realImg||'',
+        fotoIlus:l.fotoIlus||l.illusImg||''
+      }));
+      lugares.forEach(l=>ponerMarcadorEditor(l));
+      renderLista();
+      if(lugares.length)mapaLeaflet.flyTo([lugares[0].lat,lugares[0].lng],13);
+      if(d.alumno)document.getElementById('nombreAlumno').value=d.alumno;
+      toast(`✅ ${lugares.length} lugares cargados`);
+      cambiarTab('lista');
+    }catch{toast('❌ No se pudo abrir ese archivo',true);}
+  };
+  r.readAsText(f); ev.target.value='';
+}
+
+// ════════════════════════════════════════
+// GENERAR QR
+// El QR lleva a ESTA MISMA PÁGINA pero con #mapa=... en la URL
+// Los datos del mapa van comprimidos en el hash
+// ════════════════════════════════════════
+function generarQR() {
+  if (!lugares.length) { toast('⚠️ Agrega al menos un lugar primero', true); return; }
+
+  // Construir datos livianos (sin fotos full, solo miniatura)
+  // Las imágenes se comprimen a 200px para que quepan en la URL
+  const alumno = document.getElementById('nombreAlumno').value.trim() || 'Alumno';
+
+  // Comprimir imágenes a thumbnail pequeño para la URL
+  Promise.all(lugares.map(l => Promise.all([
+    comprimirImagen(l.fotoReal, 300),
+    comprimirImagen(l.fotoIlus, 300)
+  ]).then(([fr, fi]) => ({ ...l, fotoReal: fr, fotoIlus: fi }))))
+  .then(lugaresComp => {
+    const payload = { alumno, lugares: lugaresComp };
+    const json = JSON.stringify(payload);
+
+    // Codificar en base64 y poner en el hash
+    let b64;
+    try {
+      b64 = btoa(unescape(encodeURIComponent(json)));
+    } catch(e) {
+      toast('⚠️ Las imágenes son muy grandes. Intenta con imágenes más pequeñas.', true);
+      return;
+    }
+
+    if (b64.length > 25000) {
+      toast('⚠️ Las imágenes son muy pesadas para el QR. Usa fotos más pequeñas (menos de 1MB cada una).', true);
+      return;
+    }
+
+    const urlBase = window.location.href.split('#')[0];
+    const urlFinal = `${urlBase}#mapa=${b64}`;
+
+    // Limpiar QR anterior
+    const wrap = document.getElementById('qrDiv');
+    wrap.innerHTML = '';
+
+    // Generar QR con la librería
+    new QRCode(wrap, {
+      text: urlFinal,
+      width: 168,
+      height: 168,
+      colorDark: '#1a1209',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.L
+    });
+
+    // Guardar URL para descargar/imprimir
+    window._qrUrl = urlFinal;
+    window._qrAlumno = alumno;
+
+    document.getElementById('qrMsg').textContent =
+      `✅ QR listo para ${alumno}. Al escanearlo, cualquier celular abre tu mapa completo.`;
+
+    toast('📲 ¡QR generado! Ya puedes escanearlo');
+  });
+}
+
+// Comprimir imagen a maxPx px en su lado más largo
+function comprimirImagen(dataUrl, maxPx) {
+  return new Promise(resolve => {
+    if (!dataUrl || !dataUrl.startsWith('data:')) { resolve(''); return; }
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxPx || h > maxPx) {
+        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+        else { w = Math.round(w * maxPx / h); h = maxPx; }
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', 0.6));
+    };
+    img.onerror = () => resolve('');
+    img.src = dataUrl;
+  });
+}
+
+function descargarQR() {
+  const img = document.getElementById('qrDiv').querySelector('img');
+  if (!img) { toast('⚠️ Primero genera el QR', true); return; }
+  const a = document.createElement('a');
+  a.download = `qr-${window._qrAlumno||'mapa'}.png`;
+  a.href = img.src;
+  a.click();
+}
+
+function imprimirQR() {
+  const img = document.getElementById('qrDiv').querySelector('img');
+  if (!img) { toast('⚠️ Primero genera el QR', true); return; }
+  const alumno = window._qrAlumno || '';
+  const w = window.open('');
+  w.document.write(`<!DOCTYPE html><html><body style="text-align:center;padding:48px;font-family:sans-serif">
+    <h2 style="margin-bottom:4px">MapArt — Mapa Turístico</h2>
+    <p style="opacity:.5;font-size:14px;margin-bottom:24px">${alumno}</p>
+    <img src="${img.src}" style="width:260px;height:260px"><br>
+    <p style="font-size:12px;opacity:.4;margin-top:16px">Escanea para ver el mapa interactivo con las ilustraciones</p>
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`);
+  w.document.close();
+}
+
+// ════════════════════════════════════════
+// VISTA PRESENTACIÓN (se activa con el QR)
+// ════════════════════════════════════════
+function cargarPresentacionDesdeHash(hash) {
+  try {
+    const b64 = hash.replace('#mapa=', '');
+    const json = decodeURIComponent(escape(atob(b64)));
+    const datos = JSON.parse(json);
+    mostrarPresentacion(datos);
+  } catch(e) {
+    document.getElementById('vistaPresentacion').innerHTML =
+      '<div style="padding:40px;text-align:center;font-family:sans-serif"><h2>Error al cargar el mapa</h2><p style="opacity:.6;margin-top:8px">El enlace puede estar dañado.</p></div>';
+  }
+}
+
+function mostrarPresentacion(datos) {
+  const alumno = datos.alumno || 'Alumno';
+  const lgs = datos.lugares || [];
+
+  document.getElementById('presAlumnoNombre').textContent = `Mapa de: ${alumno}`;
+  document.title = `MapArt — ${alumno}`;
+
+  // Mapa en presentación
+  const mapaDiv = document.getElementById('presMapaWrap');
+  setTimeout(() => {
+    const mp = L.map(mapaDiv).setView(
+      lgs.length ? [lgs[0].lat, lgs[0].lng] : [19.4326,-99.1332],
+      13
+    );
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(mp);
+    lgs.forEach((l, i) => {
+      const m = L.marker([l.lat,l.lng],{icon:hacerIconoPresent(i+1)}).addTo(mp);
+      m.on('click', () => {
+        document.getElementById('lugar-card-'+l.id)?.scrollIntoView({behavior:'smooth'});
+      });
+    });
+    if (lgs.length > 1) {
+      const bounds = L.latLngBounds(lgs.map(l=>[l.lat,l.lng]));
+      mp.fitBounds(bounds, {padding:[30,30]});
+    }
+  }, 100);
+
+  // Tarjetas de lugares
+  const cont = document.getElementById('presLugares');
+  cont.innerHTML = lgs.map((l, i) => {
+    const tr = l.fotoReal && l.fotoReal.length > 50;
+    const ti = l.fotoIlus && l.fotoIlus.length > 50;
+    return `
+    <div class="lugar-card" id="lugar-card-${l.id}">
+      <div class="lugar-card-header">
+        <div class="lugar-num">${i+1}</div>
+        <div>
+          <div class="lugar-nombre">${l.nombre}</div>
+          ${l.desc?`<div class="lugar-desc">${l.desc}</div>`:''}
+          <div class="lugar-coords">📍 ${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}</div>
+        </div>
+      </div>
+      <div class="lugar-body">
+        <button class="comparar-btn" onclick="abrirModal_pres(${JSON.stringify({id:l.id,nombre:l.nombre,lat:l.lat,lng:l.lng,fotoReal:l.fotoReal||'',fotoIlus:l.fotoIlus||''}).replace(/"/g,'&quot;')})">
+          ↔ Comparar ilustración con foto real
+        </button>
+        <div class="imgs-grid">
+          ${tr?`<div><img src="${l.fotoReal}" alt="Foto real"><div class="img-lbl">📸 Foto real</div></div>`:'<div style="background:#eee;border-radius:7px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:.7rem;opacity:.4">Sin foto</div>'}
+          ${ti?`<div><img src="${l.fotoIlus}" alt="Ilustración"><div class="img-lbl">🎨 Ilustración</div></div>`:'<div style="background:#eee;border-radius:7px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:.7rem;opacity:.4">Sin ilustración</div>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function hacerIconoPresent(n) {
+  return L.divIcon({
+    html:`<div style="background:#c8861a;color:#fff;width:33px;height:33px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:3px solid #1a1209;box-shadow:0 3px 10px rgba(0,0,0,.4)"><span style="transform:rotate(45deg)">${n}</span></div>`,
+    className:'',iconSize:[33,33],iconAnchor:[17,33],popupAnchor:[0,-36]
+  });
+}
+
+// Abrir modal en vista presentación (datos vienen como objeto serializado)
+function abrirModal_pres(obj) {
+  let l;
+  if (typeof obj === 'string') {
+    try { l = JSON.parse(obj); } catch { return; }
+  } else { l = obj; }
+  abrirModal_datos(l);
+}
+
+// ════════════════════════════════════════
+// MODAL COMPARAR (compartido entre editor y presentación)
+// ════════════════════════════════════════
+function abrirModal(id) {
+  const l = lugares.find(x=>x.id===id);
+  if (!l) return;
+  abrirModal_datos(l);
+}
+
+function abrirModal_datos(l) {
+  document.getElementById('modalTit').textContent = `Comparar: ${l.nombre}`;
+  document.getElementById('mCoords').textContent = `${(+l.lat).toFixed(6)}, ${(+l.lng).toFixed(6)}`;
+  const ph = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect fill='%231a1209' width='400' height='300'/><text fill='%23c8861a' font-family='sans-serif' font-size='16' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'>Sin imagen</text></svg>`;
+  document.getElementById('mReal').src = (l.fotoReal&&l.fotoReal.length>50) ? l.fotoReal : ph;
+  document.getElementById('mIlus').src = (l.fotoIlus&&l.fotoIlus.length>50) ? l.fotoIlus : ph;
+  document.getElementById('sReal').src = document.getElementById('mReal').src;
+  document.getElementById('sIlus').src = document.getElementById('mIlus').src;
+  setPosSlider(0.5);
+  document.getElementById('modalCmp').classList.add('on');
+}
+function cerrarModal(){ document.getElementById('modalCmp').classList.remove('on'); }
+
+// ════════════════════════════════════════
+// SLIDER
+// ════════════════════════════════════════
+function setPosSlider(r){
+  const p=Math.min(Math.max(r,.02),.98);
+  document.getElementById('sIlus').style.clipPath=`inset(0 ${(1-p)*100}% 0 0)`;
+  document.getElementById('sLine').style.left=(p*100)+'%';
+  document.getElementById('sHandle').style.left=(p*100)+'%';
+}
+function startDrag(e){dragOn=true;moveDrag(e);e.preventDefault();}
+document.addEventListener('mousemove',e=>{if(dragOn)moveDrag(e);});
+document.addEventListener('touchmove',e=>{if(dragOn)moveDrag(e);},{passive:false});
+document.addEventListener('mouseup',()=>dragOn=false);
+document.addEventListener('touchend',()=>dragOn=false);
+function moveDrag(e){
+  const b=document.getElementById('sBox');if(!b)return;
+  const r=b.getBoundingClientRect();
+  const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  setPosSlider(x/r.width);
+}
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+function toast(msg, err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(err?' err':'');
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),3200);
+}
+</script>
+
+<!-- QRCode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>
