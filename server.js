@@ -9,6 +9,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 
+// Configuracion de proxy para Render (Necesario para el rate limiter)
+app.set('trust proxy', 1);
+
 // Configuracion de Seguridad (DevSecOps)
 app.use(helmet({
   contentSecurityPolicy: false // Desactivado para permitir tiles de Leaflet y scripts locales
