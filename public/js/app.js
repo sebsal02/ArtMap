@@ -14,6 +14,18 @@ function getOrGenerateToken() {
 }
 var userToken = getOrGenerateToken();
 
+// Cerrar modales con tecla Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var modalQR = document.getElementById('modalQR');
+    if (modalQR) modalQR.classList.remove('on');
+    var modalCmp = document.getElementById('modalCmp');
+    if (modalCmp) modalCmp.classList.remove('on');
+    var modalImg = document.getElementById('modalImgFull');
+    if (modalImg) modalImg.classList.remove('on');
+  }
+});
+
 window.onload = () => {
   // Precargar ultimo autor usado
   var lastAuthor = localStorage.getItem('mapArtLastAuthor');
@@ -75,7 +87,7 @@ function resizeImage(file, callback) {
       var canvas = document.createElement('canvas');
       var w = img.width;
       var h = img.height;
-      var MAX = 500; 
+      var MAX = 1920; // 1080p resolution maximum for excellent quality
 
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
@@ -85,7 +97,7 @@ function resizeImage(file, callback) {
       canvas.height = h;
       var ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      callback(canvas.toDataURL('image/jpeg', 0.6));
+      callback(canvas.toDataURL('image/jpeg', 0.9)); // Alta calidad
     };
     img.src = e.target.result;
   };
@@ -159,9 +171,8 @@ async function agregarLugar() {
       
       toast('Mapa guardado con exito.');
       
-      // Actualizar historial
+      // Actualizar historial en segundo plano
       cargarHistorialMapas();
-      cambiarTab('historial');
     } else {
       toast('Error del servidor: ' + (data.error || 'Desconocido'), true);
     }
@@ -195,8 +206,9 @@ async function cargarHistorialMapas() {
       for (var i = 0; i < data.mapas.length; i++) {
         var m = data.mapas[i];
         html += '<div style="position:relative; border:1px solid #ccc; padding:12px; border-radius:8px; background:#fff;">';
-        html += '<button onclick="borrarMapaEnServidor(\'' + m.id + '\')" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:var(--rust); font-size:1.2rem; cursor:pointer;" title="Borrar Mapa">&#128465;</button>';
-        html += '<div style="font-weight:bold; font-size:1.1rem; color:var(--ochre); padding-right:25px;">' + (m.placeName || 'Lugar sin nombre') + '</div>';
+        var svgTrash = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+        html += '<button onclick="borrarMapaEnServidor(\'' + m.id + '\')" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:var(--rust); cursor:pointer; padding:5px; border-radius:4px;" onmouseover="this.style.backgroundColor=\'#ffebee\'" onmouseout="this.style.backgroundColor=\'transparent\'" title="Borrar Mapa">' + svgTrash + '</button>';
+        html += '<div style="font-weight:bold; font-size:1.1rem; color:var(--ochre); padding-right:35px;">' + (m.placeName || 'Lugar sin nombre') + '</div>';
         html += '<div style="font-size:0.9rem; margin-top:4px;">Ubicacion: <b>Lat ' + m.placeLat.toFixed(4) + ', Lng ' + m.placeLng.toFixed(4) + '</b></div>';
         html += '<div style="font-size:0.9rem; margin-top:4px;">Autor: <b>' + m.author + '</b></div>';
         html += '<div style="font-size:0.8rem; color:#666; margin-top:4px;">Creado: ' + new Date(m.createdAt).toLocaleDateString() + '</div>';

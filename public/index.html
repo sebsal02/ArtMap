@@ -98,8 +98,8 @@
 
 <!-- Modal para mostrar QR -->
 <div class="modal-ov" id="modalQR">
-  <div class="modal" style="text-align:center; padding:30px; align-items:center; max-width:400px;">
-    <button onclick="document.getElementById('modalQR').classList.remove('on')" class="close-btn" style="position:absolute; top:15px; right:15px; background:var(--ink); border-radius:50%; width:30px; height:30px; display:flex; justify-content:center; align-items:center; font-size:1rem;">X</button>
+  <div class="modal" style="position:relative; text-align:center; padding:30px; align-items:center; max-width:400px; padding-top:40px;">
+    <button onclick="document.getElementById('modalQR').classList.remove('on')" class="close-btn" style="position:absolute; top:10px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">X</button>
     <h3 style="margin-bottom:10px;">Codigo QR del Mapa</h3>
     <p style="font-size:0.9rem; color:#666; margin-bottom:20px;">Muestre este QR al profesor para calificar el mapa.</p>
     <div id="qrCanvas" style="background:#fff; padding:15px; border:2px solid var(--ochre); border-radius:12px; display:inline-block; margin-bottom:20px;"></div>
