@@ -67,10 +67,10 @@
 
 <!-- Modal para slider (Comparador Amplio) -->
 <div class="modal-ov" id="modalCmp" style="padding:0;">
-  <div class="modal large-modal">
-    <div class="modal-hdr">
+  <div class="modal large-modal" style="position:relative;">
+    <div class="modal-hdr" style="padding-right: 60px;">
       <h3 id="modalTit" style="margin:0;font-size:1.1rem;">Vista Comparativa</h3>
-      <button onclick="document.getElementById('modalCmp').classList.remove('on')" class="close-btn">X</button>
+      <button onclick="document.getElementById('modalCmp').classList.remove('on')" class="close-btn" style="position:absolute; top:15px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100;">X</button>
     </div>
     <div class="modal-body" style="padding:20px;">
       <p class="instruction">Deslice la linea vertical para comparar las capas.</p>

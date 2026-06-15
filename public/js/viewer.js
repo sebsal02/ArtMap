@@ -1,5 +1,15 @@
 let map;
 
+// Cerrar modales con tecla Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var modalCmp = document.getElementById('modalCmp');
+    if (modalCmp) modalCmp.classList.remove('on');
+    var modalImg = document.getElementById('modalImgFull');
+    if (modalImg) modalImg.classList.remove('on');
+  }
+});
+
 window.onload = async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const id = urlParams.get('id');
