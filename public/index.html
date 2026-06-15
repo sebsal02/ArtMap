@@ -1,115 +1,133 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Encabezados de seguridad CSP basicos en frontend -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org;">
-<title>MapArt - Creador de Mapas</title>
-<link rel="icon" type="image/png" href="favicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Encabezados de seguridad CSP basicos en frontend -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org;">
+  <title>MapArt - Creador de Mapas</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
-<header style="position:relative; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
-  <div class="logo">Map<span>Art</span> <span class="logo-sub">Panel del Alumno</span></div>
-  <div id="userIdDisplay" style="color:#f2e0c9; font-weight:bold; font-size:1.1rem; border:2px solid #c8861a; padding:5px 15px; border-radius:20px;"></div>
-</header>
-
-<div class="app-grid">
-  <aside class="sidebar">
-    <div class="tabs">
-      <button class="tab on" data-tab="agregar" onclick="cambiarTab('agregar')">Agregar Lugar</button>
-      <button class="tab" data-tab="historial" onclick="cambiarTab('historial')">Tus Mapas</button>
+  <header style="position:relative; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
+    <div class="logo">Map<span>Art</span> <span class="logo-sub">Panel del Alumno</span></div>
+    <div id="userIdDisplay"
+      style="color:#f2e0c9; font-weight:bold; font-size:1.1rem; border:2px solid #c8861a; padding:5px 15px; border-radius:20px;">
     </div>
+  </header>
 
-    <!-- PANEL AGREGAR -->
-    <div class="panel on" id="tab-agregar">
-      <div class="step-card">1. Selecciona un punto en el mapa.</div>
-      <div class="coord-box" id="coordInfo">Esperando seleccion en el mapa...</div>
-      
-      <div class="step-card">2. Ingresa los datos del lugar.</div>
-      <input class="inp" id="pNombre" placeholder="Ej: Catedral de la Ciudad">
-      <input class="inp" id="alumnoNombre" placeholder="Tu Nombre Completo (Autor)" style="margin-top:10px;">
-      
-      <div class="step-card">3. Sube las imagenes correspondientes.</div>
-      
-      <label class="upz">
-        <input type="file" id="uReal" accept="image/*" onchange="previewImg(event, 'pvReal')">
-        <b>Subir Foto Real</b>
-      </label>
-      <img id="pvReal" class="prev" onclick="verImagen(this.src)" title="Clic para ver en pantalla completa">
-
-      <label class="upz">
-        <input type="file" id="uIlus" accept="image/*" onchange="previewImg(event, 'pvIlus')">
-        <b>Subir Ilustracion</b>
-      </label>
-      <img id="pvIlus" class="prev" onclick="verImagen(this.src)" title="Clic para ver en pantalla completa">
-
-      <button class="btn btn-green" style="margin-top:10px" onclick="agregarLugar()" id="btnGuardarLugar">Guardar Mapa en Servidor</button>
-    </div>
-
-    <!-- PANEL HISTORIAL DE MAPAS DEL USUARIO -->
-    <div class="panel" id="tab-historial">
-      <div style="font-size:0.85rem; margin-bottom:10px; color:#555;">Tus mapas</div>
-      <button class="btn btn-blue" onclick="cargarHistorialMapas()">Actualizar Historial</button>
-      <div id="listaHistorial" style="margin-top:15px; display:flex; flex-direction:column; gap:10px;">Cargando...</div>
-    </div>
-
-
-  </aside>
-  <div id="map"></div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<!-- Modal para slider (Comparador Amplio) -->
-<div class="modal-ov" id="modalCmp" style="padding:0;">
-  <div class="modal large-modal" style="position:relative;">
-    <div class="modal-hdr" style="padding-right: 60px;">
-      <h3 id="modalTit" style="margin:0;font-size:1.1rem;">Vista Comparativa</h3>
-      <button onclick="document.getElementById('modalCmp').classList.remove('on')" class="close-btn" style="position:absolute; top:15px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100;">X</button>
-    </div>
-    <div class="modal-body" style="padding:20px;">
-      <p class="instruction">Deslice la linea vertical para comparar las capas.</p>
-      <div class="slider-box" id="sBox">
-        <img id="sIlus" class="slider-img" src="">
-        <img id="sReal" class="slider-img top" src="">
-        <div class="slider-line" id="sLine"></div>
-        <div class="slider-handle" id="sHandle">||</div>
+  <div class="app-grid">
+    <aside class="sidebar">
+      <div class="tabs">
+        <button class="tab on" data-tab="agregar" onclick="cambiarTab('agregar')">Agregar Lugar</button>
+        <button class="tab" data-tab="historial" onclick="cambiarTab('historial')">Tus Mapas</button>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:15px;font-size:0.9rem;font-weight:bold;color:#555;">
-        <span>CAPA: ILUSTRACION</span>
-        <span>CAPA: FOTOGRAFIA</span>
+
+      <!-- PANEL AGREGAR -->
+      <div class="panel on" id="tab-agregar">
+        <div class="step-card">1. Selecciona un punto en el mapa.</div>
+        <div class="coord-box" id="coordInfo">Esperando seleccion en el mapa...</div>
+
+        <div class="step-card">2. Ingresa los datos del lugar.</div>
+        <input class="inp" id="pNombre" placeholder="Ej: Catedral de la Ciudad">
+        <input class="inp" id="alumnoNombre" placeholder="Tu Nombre Completo (Autor)" style="margin-top:10px;">
+
+        <div class="step-card">3. Sube las imagenes correspondientes.</div>
+
+        <label class="upz">
+          <input type="file" id="uReal" accept="image/*" onchange="previewImg(event, 'pvReal')">
+          <b>Subir Foto Real</b>
+        </label>
+        <img id="pvReal" class="prev" onclick="verImagen(this.src)" title="Clic para ver en pantalla completa">
+
+        <label class="upz">
+          <input type="file" id="uIlus" accept="image/*" onchange="previewImg(event, 'pvIlus')">
+          <b>Subir Ilustracion</b>
+        </label>
+        <img id="pvIlus" class="prev" onclick="verImagen(this.src)" title="Clic para ver en pantalla completa">
+
+        <button class="btn btn-green" style="margin-top:10px" onclick="agregarLugar()" id="btnGuardarLugar">Guardar
+          Mapa</button>
+      </div>
+
+      <!-- PANEL HISTORIAL DE MAPAS DEL USUARIO -->
+      <div class="panel" id="tab-historial">
+        <div style="font-size:0.85rem; margin-bottom:10px; color:#555;">Tus mapas</div>
+        <button class="btn btn-blue" onclick="cargarHistorialMapas()">Actualizar Historial</button>
+        <div id="listaHistorial" style="margin-top:15px; display:flex; flex-direction:column; gap:10px;">Cargando...
+        </div>
+      </div>
+
+
+    </aside>
+    <div id="map"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Modal para slider (Comparador Amplio) -->
+  <div class="modal-ov" id="modalCmp" style="padding:0;">
+    <div class="modal large-modal" style="position:relative;">
+      <div class="modal-hdr" style="padding-right: 60px;">
+        <h3 id="modalTit" style="margin:0;font-size:1.1rem;">Vista Comparativa</h3>
+        <button onclick="document.getElementById('modalCmp').classList.remove('on')" class="close-btn"
+          style="position:absolute; top:15px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100;">X</button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <p class="instruction">Deslice la linea vertical para comparar las capas.</p>
+        <div class="slider-box" id="sBox">
+          <img id="sIlus" class="slider-img" src="">
+          <img id="sReal" class="slider-img top" src="">
+          <div class="slider-line" id="sLine"></div>
+          <div class="slider-handle" id="sHandle">||</div>
+        </div>
+        <div
+          style="display:flex;justify-content:space-between;margin-top:15px;font-size:0.9rem;font-weight:bold;color:#555;">
+          <span>CAPA: ILUSTRACION</span>
+          <span>CAPA: FOTOGRAFIA</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Modal Visor de Imagen Individual -->
-<div class="modal-ov" id="modalImgFull">
-  <div class="modal" style="background:transparent; box-shadow:none; align-items:center;">
-    <button onclick="document.getElementById('modalImgFull').classList.remove('on')" class="close-btn" style="position:absolute; top:20px; right:20px; background:#fff; color:#000;">X</button>
-    <img id="imgFullTarget" src="" style="max-width:100%; height:auto; max-height:85vh; object-fit:contain; border-radius:8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
+  <!-- Modal Visor de Imagen Individual -->
+  <div class="modal-ov" id="modalImgFull">
+    <div class="modal" style="background:transparent; box-shadow:none; align-items:center;">
+      <button onclick="document.getElementById('modalImgFull').classList.remove('on')" class="close-btn"
+        style="position:absolute; top:20px; right:20px; background:#fff; color:#000;">X</button>
+      <img id="imgFullTarget" src=""
+        style="max-width:100%; height:auto; max-height:85vh; object-fit:contain; border-radius:8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
+    </div>
   </div>
-</div>
 
-<!-- Modal para mostrar QR -->
-<div class="modal-ov" id="modalQR">
-  <div class="modal" style="position:relative; text-align:center; padding:30px; align-items:center; max-width:400px; padding-top:40px;">
-    <button onclick="document.getElementById('modalQR').classList.remove('on')" class="close-btn" style="position:absolute; top:10px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">X</button>
-    <h3 style="margin-bottom:10px;">Codigo QR del Mapa</h3>
-    <p style="font-size:0.9rem; color:#666; margin-bottom:20px;">Muestre este QR al profesor para calificar el mapa.</p>
-    <div id="qrCanvas" style="background:#fff; padding:15px; border:2px solid var(--ochre); border-radius:12px; display:inline-block; margin-bottom:20px;"></div>
-    <br>
-    <button class="btn btn-blue" onclick="window.print()" style="margin-top:10px;">Imprimir Codigo QR</button>
+  <!-- Modal para mostrar QR -->
+  <div class="modal-ov" id="modalQR">
+    <div class="modal"
+      style="position:relative; text-align:center; padding:30px; align-items:center; max-width:400px; padding-top:40px;">
+      <button onclick="document.getElementById('modalQR').classList.remove('on')" class="close-btn"
+        style="position:absolute; top:10px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">X</button>
+      <h3 style="margin-bottom:10px;">Codigo QR del Mapa</h3>
+      </p>
+      <div id="qrCanvas"
+        style="background:#fff; padding:15px; border:2px solid var(--ochre); border-radius:12px; display:inline-block; margin-bottom:20px;">
+      </div>
+      <br>
+      <button class="btn btn-blue" onclick="window.print()" style="margin-top:10px;">Imprimir Codigo QR</button>
+    </div>
   </div>
-</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="js/app.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/app.js"></script>
 </body>
+
 </html>

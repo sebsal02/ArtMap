@@ -1,88 +1,214 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org;">
-<title>MapArt - Visor del Profesor</title>
-<link rel="icon" type="image/png" href="favicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css">
-<style>
-  body { background: var(--cream); overflow-y: auto; }
-  .viewer-container { max-width: 800px; margin: 0 auto; background: #fff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-  .viewer-header { background: var(--ink); color: var(--cream); padding: 20px; text-align: center; }
-  .viewer-header h1 { font-family: 'Playfair Display', serif; color: var(--ochre); margin-bottom: 5px; font-size: 1.8rem; }
-  .viewer-header p { opacity: 0.8; font-size: 0.9rem; }
-  #map { height: 350px; width: 100%; z-index: 1; border-bottom:3px solid var(--ochre); }
-  
-  .places-list { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-  .place-card { border: 1.5px solid #eee; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-  .place-header { background: var(--paper); padding: 15px; display: flex; align-items: center; gap: 12px; }
-  .place-num { background: var(--ochre); color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
-  .place-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--ink); }
-  .place-body { padding: 15px; }
-  
-  .compare-btn { background: var(--ink); color: #fff; border: none; padding: 15px; border-radius: 8px; width: 100%; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 8px; }
-  .compare-btn:active { background: #000; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org;">
+  <title>MapArt - Visor del Profesor</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: var(--cream);
+      overflow-y: auto;
+    }
 
-  .images-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-  .img-box { text-align: center; }
-  .img-box img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: zoom-in; }
-  .img-box p { font-size: 0.85rem; margin-top: 8px; color: var(--ink); opacity: 0.8; font-weight: bold; }
+    .viewer-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100vh;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
 
-  #loading { padding: 50px; text-align: center; font-size: 1.2rem; color: var(--ochre); font-weight:bold; }
-</style>
+    .viewer-header {
+      background: var(--ink);
+      color: var(--cream);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .viewer-header h1 {
+      font-family: 'Playfair Display', serif;
+      color: var(--ochre);
+      margin-bottom: 5px;
+      font-size: 1.8rem;
+    }
+
+    .viewer-header p {
+      opacity: 0.8;
+      font-size: 0.9rem;
+    }
+
+    #map {
+      height: 350px;
+      width: 100%;
+      z-index: 1;
+      border-bottom: 3px solid var(--ochre);
+    }
+
+    .places-list {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .place-card {
+      border: 1.5px solid #eee;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .place-header {
+      background: var(--paper);
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .place-num {
+      background: var(--ochre);
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .place-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .place-body {
+      padding: 15px;
+    }
+
+    .compare-btn {
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compare-btn:active {
+      background: #000;
+    }
+
+    .images-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .img-box {
+      text-align: center;
+    }
+
+    .img-box img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      cursor: zoom-in;
+    }
+
+    .img-box p {
+      font-size: 0.85rem;
+      margin-top: 8px;
+      color: var(--ink);
+      opacity: 0.8;
+      font-weight: bold;
+    }
+
+    #loading {
+      padding: 50px;
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--ochre);
+      font-weight: bold;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="viewer-container">
-  <div class="viewer-header">
-    <h1>MapArt</h1>
-    <p id="authorName">Cargando identificador de mapa...</p>
-  </div>
-  
-  <div id="loading">Conectando a base de datos segura...</div>
-  
-  <div id="content" style="display:none;">
-    <div id="map"></div>
-    <div class="places-list" id="placesList"></div>
-  </div>
-</div>
-
-<!-- Modal Compare -->
-<div class="modal-ov" id="modalCmp" style="padding:0;">
-  <div class="modal large-modal" style="position:relative;">
-    <div class="modal-hdr" style="padding-right: 60px;">
-      <h3 id="modalTit" style="margin:0;font-size:1.1rem;">Visor Comparativo Profesional</h3>
-      <button onclick="document.getElementById('modalCmp').classList.remove('on')" class="close-btn" style="position:absolute; top:15px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100;">X</button>
+  <div class="viewer-container">
+    <div class="viewer-header">
+      <h1>MapArt</h1>
+      <p id="authorName">Cargando identificador de mapa...</p>
     </div>
-    <div class="modal-body">
-      <p class="instruction">Deslice el control central para examinar los detalles.</p>
-      <div class="slider-box" id="sBox">
-        <img id="sIlus" class="slider-img" src="">
-        <img id="sReal" class="slider-img top" src="">
-        <div class="slider-line" id="sLine"></div>
-        <div class="slider-handle" id="sHandle">||</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:0.8rem;font-weight:bold;color:#555;">
-        <span>CAPA: ILUSTRACION</span>
-        <span>CAPA: FOTOGRAFIA</span>
-      </div>
+
+    <div id="loading">Conectando a base de datos segura...</div>
+
+    <div id="content" style="display:none;">
+      <div id="map"></div>
+      <div class="places-list" id="placesList"></div>
     </div>
   </div>
-</div>
 
-<!-- Modal Visor de Imagen Individual -->
-<div class="modal-ov" id="modalImgFull">
-  <div class="modal" style="background:transparent; box-shadow:none; align-items:center;">
-    <button onclick="document.getElementById('modalImgFull').classList.remove('on')" class="close-btn" style="position:absolute; top:20px; right:20px; background:#fff; color:#000;">X</button>
-    <img id="imgFullTarget" src="" style="max-width:100%; height:auto; max-height:85vh; object-fit:contain; border-radius:8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
+  <!-- Modal Compare -->
+  <div class="modal-ov" id="modalCmp" style="padding:0;">
+    <div class="modal large-modal" style="position:relative;">
+      <div class="modal-hdr" style="padding-right: 60px;">
+        <h3 id="modalTit" style="margin:0;font-size:1.1rem;">Visor Comparativo</h3>
+        <button onclick="document.getElementById('modalCmp').classList.remove('on')" class="close-btn"
+          style="position:absolute; top:15px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100;">X</button>
+      </div>
+      <div class="modal-body">
+        <p class="instruction">Deslice el control central para examinar los detalles.</p>
+        <div class="slider-box" id="sBox">
+          <img id="sIlus" class="slider-img" src="">
+          <img id="sReal" class="slider-img top" src="">
+          <div class="slider-line" id="sLine"></div>
+          <div class="slider-handle" id="sHandle">||</div>
+        </div>
+        <div
+          style="display:flex;justify-content:space-between;margin-top:10px;font-size:0.8rem;font-weight:bold;color:#555;">
+          <span>CAPA: ILUSTRACION</span>
+          <span>CAPA: FOTOGRAFIA</span>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/viewer.js"></script>
+  <!-- Modal Visor de Imagen Individual -->
+  <div class="modal-ov" id="modalImgFull">
+    <div class="modal" style="background:transparent; box-shadow:none; align-items:center;">
+      <button onclick="document.getElementById('modalImgFull').classList.remove('on')" class="close-btn"
+        style="position:absolute; top:20px; right:20px; background:#fff; color:#000;">X</button>
+      <img id="imgFullTarget" src=""
+        style="max-width:100%; height:auto; max-height:85vh; object-fit:contain; border-radius:8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/viewer.js"></script>
 </body>
+
 </html>

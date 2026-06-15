@@ -15,7 +15,7 @@ function getOrGenerateToken() {
 var userToken = getOrGenerateToken();
 
 // Cerrar modales con tecla Escape
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') {
     var modalQR = document.getElementById('modalQR');
     if (modalQR) modalQR.classList.remove('on');
@@ -43,7 +43,7 @@ window.onload = () => {
   map.on('click', (e) => {
     selectedCoord = e.latlng;
     document.getElementById('coordInfo').innerHTML = 'Seleccion: Lat ' + e.latlng.lat.toFixed(4) + ', Lng ' + e.latlng.lng.toFixed(4);
-    
+
     if (marker) map.removeLayer(marker);
     marker = L.circleMarker(e.latlng, { radius: 10, color: '#c8861a', weight: 3, fillColor: '#fff', fillOpacity: 0.9 }).addTo(map);
   });
@@ -52,7 +52,7 @@ window.onload = () => {
   // Mostrar ID del usuario en la UI
   var idDisplay = document.getElementById('userIdDisplay');
   if (idDisplay) idDisplay.textContent = 'Tu ID: ' + userToken;
-  
+
   // Precargar el historial de mapas en segundo plano para evitar pantalla vacia
   cargarHistorialMapas();
 };
@@ -64,15 +64,15 @@ function cambiarTab(tab) {
   var i;
   for (i = 0; i < allTabs.length; i++) { allTabs[i].classList.remove('on'); }
   for (i = 0; i < allPanels.length; i++) { allPanels[i].classList.remove('on'); }
-  
+
   // Activar el tab correcto por data-tab
   var activeBtn = document.querySelector('.tab[data-tab="' + tab + '"]');
   if (activeBtn) activeBtn.classList.add('on');
-  
+
   // Activar el panel correspondiente
   var activePanel = document.getElementById('tab-' + tab);
   if (activePanel) activePanel.classList.add('on');
-  
+
   // Cargar historial automaticamente
   if (tab === 'historial') {
     cargarHistorialMapas();
@@ -83,7 +83,7 @@ function previewImg(e, prevId) {
   var file = e.target.files[0];
   if (!file) return;
   var reader = new FileReader();
-  reader.onload = function(evt) {
+  reader.onload = function (evt) {
     var dataUrl = evt.target.result;
     var img = document.getElementById(prevId);
     img.src = dataUrl;
@@ -104,7 +104,7 @@ function verImagen(src) {
 async function agregarLugar() {
   var name = document.getElementById('pNombre').value.trim();
   var authorName = document.getElementById('alumnoNombre').value.trim();
-  
+
   if (!selectedCoord) return toast('Seleccione un lugar en el mapa.', true);
   if (!name) return toast('El nombre del lugar es obligatorio.', true);
   if (!authorName) return toast('El nombre del autor es obligatorio.', true);
@@ -129,11 +129,11 @@ async function agregarLugar() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ author: authorName, places: [place], userToken: userToken })
     });
-    
+
     var data = await res.json();
     if (data.success) {
       localStorage.setItem('mapArtLastAuthor', authorName);
-      
+
       // Limpiar formulario
       document.getElementById('pNombre').value = '';
       document.getElementById('pvReal').style.display = 'none';
@@ -145,9 +145,9 @@ async function agregarLugar() {
       imgIlusData = '';
       if (marker) map.removeLayer(marker);
       selectedCoord = null;
-      
+
       toast('Mapa guardado con exito.');
-      
+
       // Actualizar historial en segundo plano
       cargarHistorialMapas();
     } else {
@@ -157,7 +157,7 @@ async function agregarLugar() {
     console.error(err);
     toast('Error de conexion al guardar el mapa.', true);
   } finally {
-    btn.innerHTML = 'Guardar Mapa en Servidor';
+    btn.innerHTML = 'Guardar Mapa';
     btn.disabled = false;
   }
 }
@@ -167,7 +167,7 @@ function toast(msg, isErr) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast ' + (isErr ? 'err on' : 'on');
-  setTimeout(function() { t.classList.remove('on'); }, 3500);
+  setTimeout(function () { t.classList.remove('on'); }, 3500);
 }
 
 async function cargarHistorialMapas() {
@@ -177,7 +177,7 @@ async function cargarHistorialMapas() {
   try {
     var res = await fetch('/api/mis-mapas/' + userToken);
     var data = await res.json();
-    
+
     if (data.success && data.mapas.length > 0) {
       var html = '';
       for (var i = 0; i < data.mapas.length; i++) {
@@ -199,7 +199,7 @@ async function cargarHistorialMapas() {
     } else {
       div.innerHTML = 'Aun no tienes mapas guardados en el servidor.';
     }
-  } catch(e) {
+  } catch (e) {
     div.innerHTML = 'Error de conexion con el servidor. Verifica que el servidor este activo.';
   }
 }
@@ -223,11 +223,11 @@ async function borrarMapaEnServidor(id) {
 function mostrarQR(mapId) {
   var urlBase = window.location.origin;
   var finalUrl = urlBase + '/viewer.html?id=' + mapId;
-  
+
   document.getElementById('modalQR').classList.add('on');
   var canvas = document.getElementById('qrCanvas');
   canvas.innerHTML = '';
-  
+
   new QRCode(canvas, {
     text: finalUrl,
     width: 200,
@@ -242,21 +242,21 @@ function mostrarQR(mapId) {
 var dragOn = false;
 
 function abrirComparador(realSrc, ilusSrc) {
-  document.getElementById('sIlus').src = ilusSrc; 
-  document.getElementById('sReal').src = realSrc; 
+  document.getElementById('sIlus').src = ilusSrc;
+  document.getElementById('sReal').src = realSrc;
   document.getElementById('modalCmp').classList.add('on');
-  setSliderPos(0.5); 
+  setSliderPos(0.5);
 }
 
 function setSliderPos(ratio) {
-  var p = Math.min(Math.max(ratio, 0.05), 0.95); 
+  var p = Math.min(Math.max(ratio, 0.05), 0.95);
   var pct = (1 - p) * 100;
   document.getElementById('sReal').style.clipPath = 'inset(0 ' + pct + '% 0 0)';
   document.getElementById('sLine').style.left = (p * 100) + '%';
   document.getElementById('sHandle').style.left = (p * 100) + '%';
 }
 
-setTimeout(function() {
+setTimeout(function () {
   var sliderBox = document.getElementById('sBox');
   if (sliderBox) {
     function moveDrag(e) {
@@ -266,13 +266,13 @@ setTimeout(function() {
       setSliderPos(x / rect.width);
     }
 
-    sliderBox.addEventListener('mousedown', function(e) { dragOn = true; moveDrag(e); e.preventDefault(); });
-    sliderBox.addEventListener('touchstart', function(e) { dragOn = true; moveDrag(e); }, {passive: false});
+    sliderBox.addEventListener('mousedown', function (e) { dragOn = true; moveDrag(e); e.preventDefault(); });
+    sliderBox.addEventListener('touchstart', function (e) { dragOn = true; moveDrag(e); }, { passive: false });
 
-    document.addEventListener('mousemove', function(e) { if (dragOn) moveDrag(e); });
-    document.addEventListener('touchmove', function(e) { if (dragOn) moveDrag(e); }, {passive: false});
+    document.addEventListener('mousemove', function (e) { if (dragOn) moveDrag(e); });
+    document.addEventListener('touchmove', function (e) { if (dragOn) moveDrag(e); }, { passive: false });
 
-    document.addEventListener('mouseup', function() { dragOn = false; });
-    document.addEventListener('touchend', function() { dragOn = false; });
+    document.addEventListener('mouseup', function () { dragOn = false; });
+    document.addEventListener('touchend', function () { dragOn = false; });
   }
 }, 500);
