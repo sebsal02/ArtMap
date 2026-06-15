@@ -15,13 +15,13 @@ function getOrGenerateToken() {
 var userToken = getOrGenerateToken();
 
 window.onload = () => {
-  // Cargar borrador local si existe
-  const draft = localStorage.getItem('mapArtDraftPlaces');
-  if (draft) {
-    try {
-      places = JSON.parse(draft);
-    } catch(e) {
-      places = [];
+  // Precargar ultimo autor usado
+  var lastAuthor = localStorage.getItem('mapArtLastAuthor');
+  if (lastAuthor) {
+    var authorInput = document.getElementById('alumnoNombre');
+    if (authorInput) {
+      authorInput.value = lastAuthor;
+      setTimeout(() => toast('Nombre de autor autocompletado.'), 1000);
     }
   }
 
@@ -36,10 +36,7 @@ window.onload = () => {
     marker = L.circleMarker(e.latlng, { radius: 10, color: '#c8861a', weight: 3, fillColor: '#fff', fillOpacity: 0.9 }).addTo(map);
   });
 
-  if (places.length > 0) {
-    dibujarMarcadoresGuardados();
-  }
-  
+
   // Mostrar ID del usuario en la UI
   var idDisplay = document.getElementById('userIdDisplay');
   if (idDisplay) idDisplay.textContent = 'Tu ID: ' + userToken;
@@ -115,11 +112,18 @@ function verImagen(src) {
   document.getElementById('modalImgFull').classList.add('on');
 }
 
-function agregarLugar() {
+async function agregarLugar() {
   var name = document.getElementById('pNombre').value.trim();
+  var authorName = document.getElementById('alumnoNombre').value.trim();
+  
   if (!selectedCoord) return toast('Seleccione un lugar en el mapa.', true);
   if (!name) return toast('El nombre del lugar es obligatorio.', true);
+  if (!authorName) return toast('El nombre del autor es obligatorio.', true);
   if (!imgRealData || !imgIlusData) return toast('Ambas imagenes son requeridas.', true);
+
+  var btn = document.getElementById('btnGuardarLugar');
+  btn.innerHTML = 'Guardando en el servidor...';
+  btn.disabled = true;
 
   var place = {
     id: Date.now().toString(),
@@ -130,49 +134,47 @@ function agregarLugar() {
     ilusImg: imgIlusData
   };
 
-  places.push(place);
-  guardarBorrador();
-  
-  L.marker([place.lat, place.lng]).addTo(map).bindPopup('<b>' + place.name + '</b>');
-  
-  // Limpiar formulario
-  document.getElementById('pNombre').value = '';
-  document.getElementById('pvReal').style.display = 'none';
-  document.getElementById('pvReal').src = '';
-  document.getElementById('pvIlus').style.display = 'none';
-  document.getElementById('pvIlus').src = '';
-  document.getElementById('coordInfo').innerHTML = 'Esperando seleccion en el mapa...';
-  imgRealData = '';
-  imgIlusData = '';
-  if (marker) map.removeLayer(marker);
-  selectedCoord = null;
-  
-  toast('Lugar registrado con exito. Total: ' + places.length);
-}
-
-function guardarBorrador() {
   try {
-    localStorage.setItem('mapArtDraftPlaces', JSON.stringify(places));
-  } catch(e) {
-    toast('Advertencia: No se pudo guardar el borrador local.', true);
+    var res = await fetch('/api/mapas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author: authorName, places: [place], userToken: userToken })
+    });
+    
+    var data = await res.json();
+    if (data.success) {
+      localStorage.setItem('mapArtLastAuthor', authorName);
+      
+      // Limpiar formulario
+      document.getElementById('pNombre').value = '';
+      document.getElementById('pvReal').style.display = 'none';
+      document.getElementById('pvReal').src = '';
+      document.getElementById('pvIlus').style.display = 'none';
+      document.getElementById('pvIlus').src = '';
+      document.getElementById('coordInfo').innerHTML = 'Esperando seleccion en el mapa...';
+      imgRealData = '';
+      imgIlusData = '';
+      if (marker) map.removeLayer(marker);
+      selectedCoord = null;
+      
+      toast('Mapa guardado con exito.');
+      
+      // Actualizar historial
+      cargarHistorialMapas();
+      cambiarTab('historial');
+      mostrarQR(data.mapId);
+    } else {
+      toast('Error del servidor: ' + (data.error || 'Desconocido'), true);
+    }
+  } catch (err) {
+    console.error(err);
+    toast('Error de conexion al guardar el mapa.', true);
+  } finally {
+    btn.innerHTML = 'Guardar Mapa en Servidor';
+    btn.disabled = false;
   }
 }
 
-function dibujarMarcadoresGuardados() {
-  map.eachLayer(function(layer) {
-    if (layer instanceof L.Marker) { map.removeLayer(layer); }
-  });
-  places.forEach(function(p) {
-    L.marker([p.lat, p.lng]).addTo(map).bindPopup('<b>' + p.name + '</b>');
-  });
-}
-
-function borrarLugar(id) {
-  places = places.filter(function(p) { return p.id !== id; });
-  guardarBorrador();
-  dibujarMarcadoresGuardados();
-  toast('Lugar eliminado.');
-}
 
 function toast(msg, isErr) {
   var t = document.getElementById('toast');
@@ -194,9 +196,13 @@ async function cargarHistorialMapas() {
       for (var i = 0; i < data.mapas.length; i++) {
         var m = data.mapas[i];
         html += '<div style="border:1px solid #ccc; padding:12px; border-radius:8px; background:#fff;">';
-        html += '<div style="font-weight:bold;">Autor: ' + m.author + '</div>';
-        html += '<div style="font-size:0.8rem; color:#666;">Lugares: ' + m.placesCount + ' | Creado: ' + new Date(m.createdAt).toLocaleDateString() + '</div>';
-        html += '<a href="viewer.html?id=' + m.id + '" target="_blank" style="display:inline-block; margin-top:8px; color:var(--ochre); font-weight:bold; text-decoration:none;">Abrir Mapa</a>';
+        html += '<div style="font-weight:bold; font-size:1.1rem; color:var(--ochre);">' + (m.placeName || 'Lugar sin nombre') + '</div>';
+        html += '<div style="font-size:0.9rem; margin-top:4px;">Autor: <b>' + m.author + '</b></div>';
+        html += '<div style="font-size:0.8rem; color:#666; margin-top:4px;">Creado: ' + new Date(m.createdAt).toLocaleDateString() + '</div>';
+        html += '<div style="display:flex; gap:10px; margin-top:10px;">';
+        html += '<a href="viewer.html?id=' + m.id + '" target="_blank" class="btn btn-ochre" style="text-decoration:none; text-align:center; padding:8px; font-size:0.85rem;">Abrir Mapa</a>';
+        html += '<button class="btn btn-green" style="padding:8px; font-size:0.85rem;" onclick="mostrarQR(\'' + m.id + '\')">Ver QR</button>';
+        html += '</div>';
         html += '</div>';
       }
       div.innerHTML = html;
@@ -208,55 +214,25 @@ async function cargarHistorialMapas() {
   }
 }
 
-async function generarQR() {
-  var authorName = document.getElementById('alumnoNombre').value.trim();
-  if (places.length === 0) return toast('Agregue lugares al mapa antes de continuar.', true);
-  if (!authorName) return toast('El nombre del autor es obligatorio.', true);
+function mostrarQR(mapId) {
+  var urlBase = window.location.origin;
+  var finalUrl = urlBase + '/viewer.html?id=' + mapId;
+  
+  document.getElementById('modalQR').classList.add('on');
+  var canvas = document.getElementById('qrCanvas');
+  canvas.innerHTML = '';
+  
+  new QRCode(canvas, {
+    text: finalUrl,
+    width: 200,
+    height: 200,
+    colorDark: '#1a1209',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.L
+  });
 
-  var btn = document.getElementById('btnGenerar');
-  btn.innerHTML = 'Procesando datos seguros...';
-  btn.disabled = true;
-
-  try {
-    var res = await fetch('/api/mapas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author: authorName, places: places, userToken: userToken })
-    });
-    
-    var data = await res.json();
-    if (data.success) {
-      var urlBase = window.location.origin;
-      var finalUrl = urlBase + '/viewer.html?id=' + data.mapId;
-      
-      document.getElementById('qrResult').style.display = 'block';
-      var canvas = document.getElementById('qrCanvas');
-      canvas.innerHTML = '';
-      
-      new QRCode(canvas, {
-        text: finalUrl,
-        width: 200,
-        height: 200,
-        colorDark: '#1a1209',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.L
-      });
-
-      var link = document.getElementById('qrLink');
-      link.href = finalUrl;
-      link.textContent = finalUrl;
-      
-      toast('Mapa guardado con exito. QR generado.');
-    } else {
-      toast('Error del servidor: ' + (data.error || 'Desconocido'), true);
-    }
-  } catch (err) {
-    console.error(err);
-    toast('Error de conexion. Verifique que el servidor esta activo.', true);
-  } finally {
-    btn.innerHTML = 'Guardar en Servidor y Generar QR';
-    btn.disabled = false;
-  }
+  var link = document.getElementById('qrLink');
+  link.href = finalUrl;
 }
 
 // Control del Slider Comparador

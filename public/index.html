@@ -23,7 +23,6 @@
     <div class="tabs">
       <button class="tab on" data-tab="agregar" onclick="cambiarTab('agregar')">Agregar Lugar</button>
       <button class="tab" data-tab="historial" onclick="cambiarTab('historial')">Tus Mapas</button>
-      <button class="tab" data-tab="qr" onclick="cambiarTab('qr')">Generar Codigo QR</button>
     </div>
 
     <!-- PANEL AGREGAR -->
@@ -31,8 +30,9 @@
       <div class="step-card">1. Selecciona un punto en el mapa.</div>
       <div class="coord-box" id="coordInfo">Esperando seleccion en el mapa...</div>
       
-      <div class="step-card">2. Ingresa el nombre del lugar.</div>
+      <div class="step-card">2. Ingresa los datos del lugar.</div>
       <input class="inp" id="pNombre" placeholder="Ej: Catedral de la Ciudad">
+      <input class="inp" id="alumnoNombre" placeholder="Tu Nombre Completo (Autor)" style="margin-top:10px;">
       
       <div class="step-card">3. Sube las imagenes correspondientes.</div>
       
@@ -48,7 +48,7 @@
       </label>
       <img id="pvIlus" class="prev" onclick="verImagen(this.src)" title="Clic para ver en pantalla completa">
 
-      <button class="btn btn-ochre" style="margin-top:10px" onclick="agregarLugar()">Guardar Lugar en el Borrador</button>
+      <button class="btn btn-green" style="margin-top:10px" onclick="agregarLugar()" id="btnGuardarLugar">Guardar Mapa en Servidor</button>
     </div>
 
     <!-- PANEL HISTORIAL DE MAPAS DEL USUARIO -->
@@ -58,23 +58,7 @@
       <div id="listaHistorial" style="margin-top:15px; display:flex; flex-direction:column; gap:10px;">Cargando...</div>
     </div>
 
-    <!-- PANEL QR -->
-    <div class="panel" id="tab-qr">
-      <div class="step-card">Nombre del autor (para el maestro):</div>
-      <input class="inp" id="alumnoNombre" placeholder="Nombre completo">
-      
-      <button class="btn btn-green" style="margin-top:15px;width:100%;font-size:1.1rem;padding:15px;" onclick="generarQR()" id="btnGenerar">
-        Guardar en Servidor y Generar QR
-      </button>
 
-      <div class="qr-block" style="display:none;" id="qrResult">
-        <h3>Codigo QR Generado</h3>
-        <p>Este codigo es accesible por cualquier dispositivo y consulta directamente tus datos almacenados de forma segura.</p>
-        <div id="qrCanvas" style="background:#fff;padding:10px;border-radius:10px;margin:15px auto;width:220px;height:220px;display:flex;justify-content:center;align-items:center;"></div>
-        <a id="qrLink" href="#" target="_blank" style="color:var(--ochre);text-decoration:none;font-weight:bold;margin-bottom:10px;display:block;">Abrir Enlace Directo</a>
-        <button class="btn btn-blue" onclick="window.print()">Imprimir Esta Pagina</button>
-      </div>
-    </div>
   </aside>
   <div id="map"></div>
 </div>
@@ -82,7 +66,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- Modal para slider (Comparador Amplio) -->
-<div class="modal-ov" id="modalCmp">
+<div class="modal-ov" id="modalCmp" style="padding:0;">
   <div class="modal large-modal">
     <div class="modal-hdr">
       <h3 id="modalTit" style="margin:0;font-size:1.1rem;">Vista Comparativa</h3>
@@ -90,7 +74,7 @@
     </div>
     <div class="modal-body" style="padding:20px;">
       <p class="instruction">Deslice la linea vertical para comparar las capas.</p>
-      <div class="slider-box" id="sBox" style="aspect-ratio: 16/9; max-height:60vh;">
+      <div class="slider-box" id="sBox">
         <img id="sIlus" class="slider-img" src="">
         <img id="sReal" class="slider-img top" src="">
         <div class="slider-line" id="sLine"></div>
@@ -109,6 +93,19 @@
   <div class="modal" style="background:transparent; box-shadow:none; align-items:center;">
     <button onclick="document.getElementById('modalImgFull').classList.remove('on')" class="close-btn" style="position:absolute; top:20px; right:20px; background:#fff; color:#000;">X</button>
     <img id="imgFullTarget" src="" style="max-width:100%; height:auto; max-height:85vh; object-fit:contain; border-radius:8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
+  </div>
+</div>
+
+<!-- Modal para mostrar QR -->
+<div class="modal-ov" id="modalQR">
+  <div class="modal" style="text-align:center; padding:30px; align-items:center; max-width:400px;">
+    <button onclick="document.getElementById('modalQR').classList.remove('on')" class="close-btn" style="position:absolute; top:15px; right:15px; background:var(--ink); border-radius:50%; width:30px; height:30px; display:flex; justify-content:center; align-items:center; font-size:1rem;">X</button>
+    <h3 style="margin-bottom:10px;">Codigo QR del Mapa</h3>
+    <p style="font-size:0.9rem; color:#666; margin-bottom:20px;">Muestre este QR al profesor para calificar el mapa.</p>
+    <div id="qrCanvas" style="background:#fff; padding:15px; border:2px solid var(--ochre); border-radius:12px; display:inline-block; margin-bottom:20px;"></div>
+    <br>
+    <a id="qrLink" href="#" target="_blank" style="color:var(--ochre); font-weight:bold; text-decoration:none; margin-bottom:15px; display:inline-block; font-size:1.1rem;">Abrir Mapa Directamente</a>
+    <button class="btn btn-blue" onclick="window.print()" style="margin-top:10px;">Imprimir Codigo QR</button>
   </div>
 </div>
 

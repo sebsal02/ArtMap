@@ -172,6 +172,7 @@ app.get('/api/mis-mapas/:token', async function(req, res) {
         id: m.mapId,
         author: m.author,
         createdAt: m.createdAt,
+        placeName: m.places && m.places.length > 0 ? m.places[0].name : 'Lugar sin nombre',
         placesCount: m.places ? m.places.length : 0
       });
     }
