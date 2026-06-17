@@ -104,6 +104,7 @@ function verImagen(src) {
 async function agregarLugar() {
   var name = document.getElementById('pNombre').value.trim();
   var authorName = document.getElementById('alumnoNombre').value.trim();
+  var description = document.getElementById('pDescripcion').value.trim();
 
   if (!selectedCoord) return toast('Seleccione un lugar en el mapa.', true);
   if (!name) return toast('El nombre del lugar es obligatorio.', true);
@@ -117,6 +118,7 @@ async function agregarLugar() {
   var place = {
     id: Date.now().toString(),
     name: name,
+    description: description,
     lat: selectedCoord.lat,
     lng: selectedCoord.lng,
     realImg: imgRealData,
@@ -136,6 +138,7 @@ async function agregarLugar() {
 
       // Limpiar formulario
       document.getElementById('pNombre').value = '';
+      document.getElementById('pDescripcion').value = '';
       document.getElementById('pvReal').style.display = 'none';
       document.getElementById('pvReal').src = '';
       document.getElementById('pvIlus').style.display = 'none';
@@ -186,6 +189,9 @@ async function cargarHistorialMapas() {
         var svgTrash = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
         html += '<button onclick="borrarMapaEnServidor(\'' + m.id + '\')" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:var(--rust); cursor:pointer; padding:5px; border-radius:4px;" onmouseover="this.style.backgroundColor=\'#ffebee\'" onmouseout="this.style.backgroundColor=\'transparent\'" title="Borrar Mapa">' + svgTrash + '</button>';
         html += '<div style="font-weight:bold; font-size:1.1rem; color:var(--ochre); padding-right:35px;">' + (m.placeName || 'Lugar sin nombre') + '</div>';
+        if (m.placeDescription) {
+          html += '<div style="font-size:0.85rem; margin-top:6px; color:#444; font-style:italic; border-left:3px solid var(--ochre); padding-left:8px;">' + m.placeDescription + '</div>';
+        }
         html += '<div style="font-size:0.9rem; margin-top:4px;">Ubicacion: <b>Lat ' + m.placeLat.toFixed(4) + ', Lng ' + m.placeLng.toFixed(4) + '</b></div>';
         html += '<div style="font-size:0.9rem; margin-top:4px;">Autor: <b>' + m.author + '</b></div>';
         html += '<div style="font-size:0.8rem; color:#666; margin-top:4px;">Creado: ' + new Date(m.createdAt).toLocaleDateString() + '</div>';

@@ -126,6 +126,7 @@ app.post('/api/mapas', async function(req, res) {
       cleanPlaces.push({
         id: sanitizeString(String(p.id)),
         name: sanitizeString(p.name),
+        description: sanitizeString(p.description || ''),
         lat: p.lat,
         lng: p.lng,
         realImg: p.realImg,
@@ -165,6 +166,7 @@ app.get('/api/mis-mapas/:token', async function(req, res) {
         author: m.author,
         createdAt: m.createdAt,
         placeName: m.places && m.places.length > 0 ? m.places[0].name : 'Lugar sin nombre',
+        placeDescription: m.places && m.places.length > 0 ? (m.places[0].description || '') : '',
         placeLat: m.places && m.places.length > 0 ? m.places[0].lat : 0,
         placeLng: m.places && m.places.length > 0 ? m.places[0].lng : 0,
         placesCount: m.places ? m.places.length : 0

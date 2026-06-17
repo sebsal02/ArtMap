@@ -66,6 +66,7 @@ function mostrarMapa(mapData) {
         <div class="place-title">${p.name}</div>
       </div>
       <div class="place-body">
+        ${p.description ? '<p style="font-size:0.9rem; color:#444; font-style:italic; border-left:3px solid #c8861a; padding-left:10px; margin-bottom:15px;">' + p.description + '</p>' : ''}
         <button class="compare-btn" onclick="abrirComparador('${p.realImg}', '${p.ilusImg}')">
           Activar Comparador de Capas
         </button>
