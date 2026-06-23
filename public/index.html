@@ -4,13 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Encabezados de seguridad CSP basicos en frontend -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org;">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://nominatim.openstreetmap.org;">
   <title>MapArt - Creador de Mapas</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="css/style.css">
@@ -18,10 +16,10 @@
 
 <body>
 
-  <header style="position:relative; display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
+  <header style="position:relative; display:flex; justify-content:space-between; align-items:center; padding:0 24px;">
     <div class="logo">Map<span>Art</span> <span class="logo-sub">Panel del Alumno</span></div>
     <div id="userIdDisplay"
-      style="color:#f2e0c9; font-weight:bold; font-size:1.1rem; border:2px solid #c8861a; padding:5px 15px; border-radius:20px;">
+      style="color:var(--text-muted); font-weight:600; font-size:0.85rem; border:1px solid var(--border); padding:6px 16px; border-radius:20px; background:var(--bg-card);">
     </div>
   </header>
 
@@ -29,7 +27,7 @@
     <aside class="sidebar">
       <div class="tabs">
         <button class="tab on" data-tab="agregar" onclick="cambiarTab('agregar')">Agregar Lugar</button>
-        <button class="tab" data-tab="historial" onclick="cambiarTab('historial')">Tus Mapas</button>
+        <button class="tab" data-tab="historial" onclick="cambiarTab('historial')">Todos los Mapas</button>
       </div>
 
       <!-- PANEL AGREGAR -->
@@ -39,8 +37,8 @@
 
         <div class="step-card">2. Ingresa los datos del lugar.</div>
         <input class="inp" id="pNombre" placeholder="Ej: Catedral de la Ciudad">
-        <input class="inp" id="alumnoNombre" placeholder="Tu Nombre Completo (Autor)" style="margin-top:10px;">
-        <textarea class="inp" id="pDescripcion" placeholder="Descripcion del lugar (opcional)" rows="3" style="margin-top:10px; resize:vertical; font-family:inherit;"></textarea>
+        <input class="inp" id="alumnoNombre" placeholder="Tu Nombre Completo (Autor)">
+        <textarea class="inp" id="pDescripcion" placeholder="Descripcion del lugar (opcional)" rows="3" style="resize:vertical; font-family:inherit;"></textarea>
 
         <div class="step-card">3. Sube las imagenes correspondientes.</div>
 
@@ -60,14 +58,15 @@
           Mapa</button>
       </div>
 
-      <!-- PANEL HISTORIAL DE MAPAS DEL USUARIO -->
+      <!-- PANEL TODOS LOS MAPAS -->
       <div class="panel" id="tab-historial">
-        <div style="font-size:0.85rem; margin-bottom:10px; color:#555;">Tus mapas</div>
-        <button class="btn btn-blue" onclick="cargarHistorialMapas()">Actualizar Historial</button>
-        <div id="listaHistorial" style="margin-top:15px; display:flex; flex-direction:column; gap:10px;">Cargando...
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <button class="btn btn-blue" onclick="cargarHistorialMapas()" style="flex:1;">Actualizar</button>
+          <button class="btn btn-green" onclick="mostrarQRGlobal()" style="flex:1;">QR de la Galeria</button>
+        </div>
+        <div id="listaHistorial" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">Cargando...
         </div>
       </div>
-
 
     </aside>
     <div id="map"></div>
@@ -81,7 +80,7 @@
       <div class="modal-hdr" style="padding-right: 60px;">
         <h3 id="modalTit" style="margin:0;font-size:1.1rem;">Vista Comparativa</h3>
         <button onclick="document.getElementById('modalCmp').classList.remove('on')" class="close-btn"
-          style="position:absolute; top:15px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100;">X</button>
+          style="position:absolute; top:15px; right:15px; background:var(--danger); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100;">X</button>
       </div>
       <div class="modal-body" style="padding:20px;">
         <p class="instruction">Deslice la linea vertical para comparar las capas.</p>
@@ -92,7 +91,7 @@
           <div class="slider-handle" id="sHandle">||</div>
         </div>
         <div
-          style="display:flex;justify-content:space-between;margin-top:15px;font-size:0.9rem;font-weight:bold;color:#555;">
+          style="display:flex;justify-content:space-between;margin-top:15px;font-size:0.8rem;font-weight:600;color:var(--text-muted);">
           <span>CAPA: ILUSTRACION</span>
           <span>CAPA: FOTOGRAFIA</span>
         </div>
@@ -102,24 +101,24 @@
 
   <!-- Modal Visor de Imagen Individual -->
   <div class="modal-ov" id="modalImgFull">
-    <div class="modal" style="background:transparent; box-shadow:none; align-items:center;">
+    <div class="modal" style="background:transparent; box-shadow:none; border:none; align-items:center;">
       <button onclick="document.getElementById('modalImgFull').classList.remove('on')" class="close-btn"
-        style="position:absolute; top:20px; right:20px; background:#fff; color:#000;">X</button>
+        style="position:absolute; top:20px; right:20px; background:var(--bg-elevated); color:#fff; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">X</button>
       <img id="imgFullTarget" src=""
-        style="max-width:100%; height:auto; max-height:85vh; object-fit:contain; border-radius:8px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);">
+        style="max-width:100%; height:auto; max-height:85vh; object-fit:contain; border-radius:12px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);">
     </div>
   </div>
 
   <!-- Modal para mostrar QR -->
   <div class="modal-ov" id="modalQR">
     <div class="modal"
-      style="position:relative; text-align:center; padding:30px; align-items:center; max-width:400px; padding-top:40px;">
+      style="position:relative; text-align:center; padding:30px; align-items:center; max-width:400px; padding-top:50px;">
       <button onclick="document.getElementById('modalQR').classList.remove('on')" class="close-btn"
-        style="position:absolute; top:10px; right:15px; background:var(--rust); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">X</button>
-      <h3 style="margin-bottom:10px;">Codigo QR del Mapa</h3>
-      </p>
+        style="position:absolute; top:12px; right:15px; background:var(--danger); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">X</button>
+      <h3 style="margin-bottom:10px; color:var(--accent);">Codigo QR — Galeria de Mapas</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Escanea para ver todos los mapas de todos los alumnos.</p>
       <div id="qrCanvas"
-        style="background:#fff; padding:15px; border:2px solid var(--ochre); border-radius:12px; display:inline-block; margin-bottom:20px;">
+        style="background:#fff; padding:16px; border:2px solid var(--accent); border-radius:var(--radius); display:inline-block; margin-bottom:20px;">
       </div>
       <br>
       <button class="btn btn-blue" onclick="window.print()" style="margin-top:10px;">Imprimir Codigo QR</button>

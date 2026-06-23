@@ -45,13 +45,13 @@ window.onload = () => {
     document.getElementById('coordInfo').innerHTML = 'Seleccion: Lat ' + e.latlng.lat.toFixed(4) + ', Lng ' + e.latlng.lng.toFixed(4);
 
     if (marker) map.removeLayer(marker);
-    marker = L.circleMarker(e.latlng, { radius: 10, color: '#c8861a', weight: 3, fillColor: '#fff', fillOpacity: 0.9 }).addTo(map);
+    marker = L.circleMarker(e.latlng, { radius: 10, color: '#7c6aff', weight: 3, fillColor: '#fff', fillOpacity: 0.9 }).addTo(map);
   });
 
 
   // Mostrar ID del usuario en la UI
   var idDisplay = document.getElementById('userIdDisplay');
-  if (idDisplay) idDisplay.textContent = 'Tu ID: ' + userToken;
+  if (idDisplay) idDisplay.textContent = userToken;
 
   // Precargar el historial de mapas en segundo plano para evitar pantalla vacia
   cargarHistorialMapas();
@@ -175,38 +175,46 @@ function toast(msg, isErr) {
 
 async function cargarHistorialMapas() {
   var div = document.getElementById('listaHistorial');
-  div.innerHTML = 'Consultando base de datos...';
+  div.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Consultando base de datos...</div>';
 
   try {
-    var res = await fetch('/api/mis-mapas/' + userToken);
+    // Cargar TODOS los mapas de todos los usuarios
+    var res = await fetch('/api/todos-los-mapas');
     var data = await res.json();
 
     if (data.success && data.mapas.length > 0) {
       var html = '';
       for (var i = 0; i < data.mapas.length; i++) {
         var m = data.mapas[i];
-        html += '<div style="position:relative; border:1px solid #ccc; padding:12px; border-radius:8px; background:#fff;">';
-        var svgTrash = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
-        html += '<button onclick="borrarMapaEnServidor(\'' + m.id + '\')" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:var(--rust); cursor:pointer; padding:5px; border-radius:4px;" onmouseover="this.style.backgroundColor=\'#ffebee\'" onmouseout="this.style.backgroundColor=\'transparent\'" title="Borrar Mapa">' + svgTrash + '</button>';
-        html += '<div style="font-weight:bold; font-size:1.1rem; color:var(--ochre); padding-right:35px;">' + (m.placeName || 'Lugar sin nombre') + '</div>';
-        if (m.placeDescription) {
-          html += '<div style="font-size:0.85rem; margin-top:6px; color:#444; font-style:italic; border-left:3px solid var(--ochre); padding-left:8px;">' + m.placeDescription + '</div>';
+        var isOwner = (m.ownerToken === userToken);
+        html += '<div style="position:relative; border:1px solid var(--border); padding:14px; border-radius:var(--radius); background:var(--bg-card); transition:all 0.25s ease;">';
+
+        // Solo el dueño ve el boton de borrar
+        if (isOwner) {
+          var svgTrash = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+          html += '<button onclick="borrarMapaEnServidor(\'' + m.id + '\')" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:var(--danger); cursor:pointer; padding:5px; border-radius:6px;" onmouseover="this.style.backgroundColor=\'rgba(255,68,102,0.1)\'" onmouseout="this.style.backgroundColor=\'transparent\'" title="Borrar Mapa">' + svgTrash + '</button>';
         }
-        html += '<div style="font-size:0.9rem; margin-top:4px;">Ubicacion: <b>Lat ' + m.placeLat.toFixed(4) + ', Lng ' + m.placeLng.toFixed(4) + '</b></div>';
-        html += '<div style="font-size:0.9rem; margin-top:4px;">Autor: <b>' + m.author + '</b></div>';
-        html += '<div style="font-size:0.8rem; color:#666; margin-top:4px;">Creado: ' + new Date(m.createdAt).toLocaleDateString() + '</div>';
-        html += '<div style="display:flex; gap:10px; margin-top:10px;">';
-        html += '<a href="viewer.html?id=' + m.id + '" target="_blank" class="btn btn-ochre" style="text-decoration:none; text-align:center; padding:8px; font-size:0.85rem;">Abrir Mapa</a>';
-        html += '<button class="btn btn-green" style="padding:8px; font-size:0.85rem;" onclick="mostrarQR(\'' + m.id + '\')">Ver QR</button>';
+
+        html += '<div style="font-weight:700; font-size:1.05rem; color:var(--accent-light); padding-right:35px;">' + (m.placeName || 'Lugar sin nombre') + '</div>';
+
+        // Mostrar descripcion en vez de coordenadas
+        if (m.placeDescription) {
+          html += '<div style="font-size:0.83rem; margin-top:8px; color:var(--text-secondary); font-style:italic; border-left:2px solid var(--accent); padding-left:10px;">' + m.placeDescription + '</div>';
+        }
+
+        html += '<div style="font-size:0.85rem; margin-top:6px; color:var(--text-muted);">Autor: <b style="color:var(--text-primary);">' + m.author + '</b></div>';
+        html += '<div style="font-size:0.78rem; color:var(--text-muted); margin-top:3px;">Creado: ' + new Date(m.createdAt).toLocaleDateString() + '</div>';
+        html += '<div style="display:flex; gap:8px; margin-top:12px;">';
+        html += '<a href="viewer.html?id=' + m.id + '" target="_blank" class="btn btn-ochre" style="text-decoration:none; text-align:center; padding:9px; font-size:0.82rem;">Abrir Mapa</a>';
         html += '</div>';
         html += '</div>';
       }
       div.innerHTML = html;
     } else {
-      div.innerHTML = 'Aun no tienes mapas guardados en el servidor.';
+      div.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Aun no hay mapas guardados en el servidor.</div>';
     }
   } catch (e) {
-    div.innerHTML = 'Error de conexion con el servidor. Verifica que el servidor este activo.';
+    div.innerHTML = '<div style="text-align:center; padding:20px; color:var(--danger);">Error de conexion con el servidor.</div>';
   }
 }
 
@@ -226,9 +234,10 @@ async function borrarMapaEnServidor(id) {
   }
 }
 
-function mostrarQR(mapId) {
+// QR global que apunta a la galeria de todos los mapas
+function mostrarQRGlobal() {
   var urlBase = window.location.origin;
-  var finalUrl = urlBase + '/viewer.html?id=' + mapId;
+  var finalUrl = urlBase + '/galeria.html';
 
   document.getElementById('modalQR').classList.add('on');
   var canvas = document.getElementById('qrCanvas');
@@ -251,7 +260,8 @@ function abrirComparador(realSrc, ilusSrc) {
   document.getElementById('sIlus').src = ilusSrc;
   document.getElementById('sReal').src = realSrc;
   document.getElementById('modalCmp').classList.add('on');
-  setSliderPos(0.5);
+  // Inicia mostrando la ilustracion completa (slider al inicio)
+  setSliderPos(0.05);
 }
 
 function setSliderPos(ratio) {

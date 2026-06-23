@@ -66,6 +66,20 @@ async function getMapsByToken(token) {
   }
 }
 
+async function getAllMaps() {
+  if (mapsCollection) {
+    return await mapsCollection.find({}).toArray();
+  } else {
+    var results = [];
+    for (var key in memoryStore) {
+      var copy = JSON.parse(JSON.stringify(memoryStore[key]));
+      copy.mapId = key;
+      results.push(copy);
+    }
+    return results;
+  }
+}
+
 // Configuracion del servidor
 app.set('trust proxy', 1);
 
@@ -163,6 +177,7 @@ app.get('/api/mis-mapas/:token', async function(req, res) {
       var m = maps[i];
       userMaps.push({
         id: m.mapId,
+        ownerToken: m.ownerToken,
         author: m.author,
         createdAt: m.createdAt,
         placeName: m.places && m.places.length > 0 ? m.places[0].name : 'Lugar sin nombre',
@@ -176,6 +191,32 @@ app.get('/api/mis-mapas/:token', async function(req, res) {
     res.json({ success: true, mapas: userMaps });
   } catch (error) {
     console.error('Error al consultar mapas:', error);
+    res.status(500).json({ success: false, error: 'Error interno' });
+  }
+});
+
+// API: Obtener TODOS los mapas de TODOS los usuarios
+app.get('/api/todos-los-mapas', async function(req, res) {
+  try {
+    var maps = await getAllMaps();
+    var allMaps = [];
+    for (var i = 0; i < maps.length; i++) {
+      var m = maps[i];
+      allMaps.push({
+        id: m.mapId,
+        author: m.author,
+        ownerToken: m.ownerToken,
+        createdAt: m.createdAt,
+        placeName: m.places && m.places.length > 0 ? m.places[0].name : 'Lugar sin nombre',
+        placeDescription: m.places && m.places.length > 0 ? (m.places[0].description || '') : '',
+        placeLat: m.places && m.places.length > 0 ? m.places[0].lat : 0,
+        placeLng: m.places && m.places.length > 0 ? m.places[0].lng : 0,
+        placesCount: m.places ? m.places.length : 0
+      });
+    }
+    res.json({ success: true, mapas: allMaps });
+  } catch (error) {
+    console.error('Error al consultar todos los mapas:', error);
     res.status(500).json({ success: false, error: 'Error interno' });
   }
 });
