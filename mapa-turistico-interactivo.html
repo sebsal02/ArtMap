@@ -500,7 +500,7 @@ function cambiarTab(n){
 function guardarMapa(){
   if(!lugares.length){toast('⚠️ Agrega al menos un lugar',true);return;}
   const nombre=(document.getElementById('nombreAutor').value.trim()||'mi-mapa').replace(/\s+/g,'-');
-  const datos=JSON.stringify({v:'2',autor:nombre,alumno:nombre,lugares});
+  const datos=JSON.stringify({v:'2',autor:nombre,lugares});
   const blob=new Blob([datos],{type:'application/octet-stream'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -526,7 +526,7 @@ function cargarMapa(ev){
       lugares.forEach(l=>ponerMarcadorEditor(l));
       renderLista();
       if(lugares.length)mapaLeaflet.flyTo([lugares[0].lat,lugares[0].lng],13);
-      if(d.autor||d.alumno)document.getElementById('nombreAutor').value=d.autor||d.alumno;
+      if(d.autor)document.getElementById('nombreAutor').value=d.autor;
       toast(`✅ ${lugares.length} lugares cargados`);
       cambiarTab('lista');
     }catch{toast('❌ No se pudo abrir ese archivo',true);}
@@ -552,7 +552,7 @@ function generarQR() {
     comprimirImagen(l.fotoIlus, 300)
   ]).then(([fr, fi]) => ({ ...l, fotoReal: fr, fotoIlus: fi }))))
   .then(lugaresComp => {
-    const payload = { autor, alumno: autor, lugares: lugaresComp };
+    const payload = { autor, lugares: lugaresComp };
     const json = JSON.stringify(payload);
 
     // Codificar en base64 y poner en el hash
@@ -658,7 +658,7 @@ function cargarPresentacionDesdeHash(hash) {
 }
 
 function mostrarPresentacion(datos) {
-  const autor = datos.autor || datos.alumno || 'Autor';
+  const autor = datos.autor || 'Autor';
   const lgs = datos.lugares || [];
 
   document.getElementById('presAutorNombre').textContent = `Mapa de: ${autor}`;
